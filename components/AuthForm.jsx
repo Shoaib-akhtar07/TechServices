@@ -43,9 +43,9 @@ export default function AuthForm({ mode }) {
 
   return (
     <div className="mx-auto max-w-md px-4 pt-16">
-      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="rounded-3xl card p-8">
         <Logo className="mx-auto h-12 w-12" />
-        <h1 className="mt-4 text-center text-2xl font-bold">{signup ? 'Create your NexPDF account' : 'Welcome back'}</h1>
+        <h1 className="mt-4 text-center text-3xl font-semibold">{signup ? 'Create your SoftServices account' : 'Welcome back'}</h1>
         <p className="mt-1 text-center text-sm text-slate-500">{signup ? 'It takes less than a minute.' : 'Log in to use your Pro tools.'}</p>
         <form onSubmit={submit} className="mt-8 space-y-4">
           {signup && (
@@ -69,7 +69,7 @@ export default function AuthForm({ mode }) {
           </button>
         </form>
         <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-400">
-          {signup ? 'Already have an account? ' : 'New to NexPDF? '}
+          {signup ? 'Already have an account? ' : 'New to SoftServices? '}
           <Link href={`/${signup ? 'login' : 'signup'}/?next=${encodeURIComponent(next)}`} className="font-semibold text-brand-600 hover:underline">
             {signup ? 'Log in' : 'Create an account'}
           </Link>

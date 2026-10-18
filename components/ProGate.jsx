@@ -6,14 +6,14 @@ import { PRO_FEATURES } from '@/lib/plans';
 export default function ProGate({ name, slug, loggedIn }) {
   return (
     <div className="relative overflow-hidden rounded-3xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 via-white to-orange-50 p-8 text-center dark:border-amber-500/40 dark:from-amber-500/10 dark:via-slate-900 dark:to-orange-500/10 sm:p-12">
-      <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-600 text-white shadow-lg">
+      <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-600 text-white shadow-btn-gold">
         <Lock className="h-7 w-7" />
       </span>
-      <h2 className="mt-5 text-2xl font-bold">{name} is a Pro tool</h2>
+      <h2 className="mt-5 text-3xl font-semibold">{name} is a Pro tool</h2>
       <p className="mx-auto mt-2 max-w-lg text-slate-600 dark:text-slate-400">
         {loggedIn
-          ? 'Upgrade to NexPDF Pro to unlock this tool and every other Pro feature.'
-          : 'Log in with a NexPDF Pro account to use this tool, or create one in under a minute.'}
+          ? 'Upgrade to SoftServices Pro to unlock this tool and every other Pro feature.'
+          : 'Log in with a SoftServices Pro account to use this tool, or create one in under a minute.'}
       </p>
       <ul className="mx-auto mt-6 grid max-w-lg gap-2 text-left text-sm sm:grid-cols-2">
         {PRO_FEATURES.map((f) => (
@@ -23,7 +23,7 @@ export default function ProGate({ name, slug, loggedIn }) {
         ))}
       </ul>
       <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-        <Link href="/pricing/" className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-6 py-3 font-semibold text-white shadow-lg hover:opacity-90">
+        <Link href="/pricing/" className="btn-gold">
           <Crown className="h-5 w-5" /> See Pro plans — from $4/month
         </Link>
         {!loggedIn && (

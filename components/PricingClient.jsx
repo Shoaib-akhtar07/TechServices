@@ -63,8 +63,8 @@ export default function PricingClient({ testBilling }) {
       </div>
 
       <div className="mx-auto mt-10 grid max-w-4xl gap-6 md:grid-cols-2">
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 dark:border-slate-800 dark:bg-slate-900">
-          <h2 className="text-xl font-bold">Free</h2>
+        <div className="rounded-3xl card p-8">
+          <h2 className="text-2xl font-semibold">Free</h2>
           <p className="mt-4 text-4xl font-extrabold">$0</p>
           <p className="mt-1 text-sm text-slate-500">Forever. No account needed.</p>
           <ul className="mt-8 space-y-3 text-sm">
@@ -77,9 +77,9 @@ export default function PricingClient({ testBilling }) {
           <Link href="/" className="btn-secondary mt-8 w-full justify-center">Use free tools</Link>
         </div>
 
-        <div className="relative rounded-3xl border-2 border-amber-400 bg-white p-8 shadow-xl shadow-amber-500/10 dark:bg-slate-900">
+        <div className="relative rounded-3xl border-2 border-amber-400 bg-white p-8 shadow-[0_2px_4px_rgba(234,88,12,0.05),0_18px_40px_-12px_rgba(234,88,12,0.2),0_40px_70px_-30px_rgba(61,42,23,0.3)] dark:bg-slate-900 dark:shadow-card-dark">
           <span className="absolute -top-3 left-8 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-3 py-1 text-xs font-bold uppercase text-white">Most popular</span>
-          <h2 className="flex items-center gap-2 text-xl font-bold">
+          <h2 className="flex items-center gap-2 text-2xl font-semibold">
             <Crown className="h-5 w-5 text-amber-500" /> Pro
           </h2>
           <p className="mt-4 text-4xl font-extrabold">
@@ -100,7 +100,7 @@ export default function PricingClient({ testBilling }) {
           {isPro ? (
             <Link href="/account/" className="btn-secondary mt-8 w-full justify-center">You’re Pro — manage account</Link>
           ) : (
-            <button onClick={subscribe} disabled={busy} className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-6 py-3 font-semibold text-white shadow-lg hover:opacity-90 disabled:opacity-60">
+            <button onClick={subscribe} disabled={busy} className="btn-gold mt-8 w-full">
               {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Crown className="h-5 w-5" />}
               {session ? `Subscribe ${plan.label.toLowerCase()}` : 'Create account & subscribe'}
             </button>

@@ -2,11 +2,12 @@ import './globals.css';
 import { Cormorant_Garamond, Jost } from 'next/font/google';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import HomeButton from '@/components/HomeButton';
 import JsonLd from '@/components/JsonLd';
 import Providers from '@/components/Providers';
 import { SITE } from '@/lib/site';
 
-const serif = Cormorant_Garamond({ subsets: ['latin'], weight: ['400', '500', '600'], style: ['normal', 'italic'], variable: '--font-serif', display: 'swap' });
+const serif = Cormorant_Garamond({ subsets: ['latin'], weight: ['400', '500', '600', '700'], style: ['normal', 'italic'], variable: '--font-serif', display: 'swap' });
 const display = Jost({ subsets: ['latin'], weight: ['300', '400', '500', '600'], variable: '--font-display', display: 'swap' });
 
 export const metadata = {
@@ -37,7 +38,7 @@ export const metadata = {
 
 export const viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: light)', color: '#f6efe3' },
     { media: '(prefers-color-scheme: dark)', color: '#020617' },
   ],
   width: 'device-width',
@@ -77,6 +78,7 @@ export default function RootLayout({ children }) {
           <Header />
           <main id="main">{children}</main>
           <Footer />
+          <HomeButton />
         </Providers>
       </body>
     </html>

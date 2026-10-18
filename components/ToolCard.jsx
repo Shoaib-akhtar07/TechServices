@@ -8,7 +8,7 @@ export default function ToolCard({ tool }) {
   return (
     <Link
       href={`/${tool.slug}/`}
-      className="group relative flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-brand-500 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900"
+      className="group relative flex flex-col card card-hover rounded-2xl p-5"
     >
       {tool.premium && <ProBadge className="absolute right-4 top-4" />}
       <span className={`mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl text-white ${cat.color}`}>

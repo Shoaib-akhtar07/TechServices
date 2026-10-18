@@ -15,7 +15,7 @@ FROM node:20-bookworm-slim
 WORKDIR /app
 ENV NODE_ENV=production \
     SOFFICE_PATH=/usr/bin/soffice \
-    DATABASE_URL=file:/data/nexpdf.db \
+    DATABASE_URL=file:/data/softservices.db \
     PORT=3000
 RUN apt-get update && apt-get install -y --no-install-recommends \
       openssl libreoffice-writer libreoffice-calc libreoffice-impress \

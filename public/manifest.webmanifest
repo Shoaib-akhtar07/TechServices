@@ -1,10 +1,10 @@
 {
-  "name": "NexPDF – Free Online PDF Tools",
-  "short_name": "NexPDF",
+  "name": "SoftServices – Free Online PDF Tools",
+  "short_name": "SoftServices",
   "description": "Merge, split, compress, convert and sign PDFs privately in your browser.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#3b52f0",
+  "background_color": "#faf7f1",
+  "theme_color": "#141a24",
   "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
 }

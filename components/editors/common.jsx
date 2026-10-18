@@ -121,7 +121,7 @@ export function TemplatePicker({ kind, onPick, onClose }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4" role="dialog" aria-modal="true" aria-label="Templates" onClick={onClose}>
       <div className="max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="flex items-center gap-2 text-xl font-bold">
+          <h2 className="flex items-center gap-2 text-2xl font-semibold">
             <LayoutTemplate className="h-5 w-5 text-brand-600" /> Templates
           </h2>
           <button onClick={onClose} aria-label="Close" className="rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-slate-800">
@@ -155,7 +155,7 @@ export function TemplatePicker({ kind, onPick, onClose }) {
         {error && <p className="mt-4 text-sm text-rose-600">{error}</p>}
         {!pro && (
           <p className="mt-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
-            Pro templates are included with NexPDF Pro.{' '}
+            Pro templates are included with SoftServices Pro.{' '}
             <Link href="/pricing/" className="font-semibold underline">
               See plans
             </Link>

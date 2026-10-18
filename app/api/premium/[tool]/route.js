@@ -53,7 +53,7 @@ export async function POST(req, { params }) {
   // Check access before reading the upload body.
   const { user, pro } = await getAccess();
   if (!user) return fail('Please log in to use Pro tools.', 401);
-  if (!pro) return fail('This tool is part of NexPDF Pro. Please upgrade to continue.', 402);
+  if (!pro) return fail('This tool is part of SoftServices Pro. Please upgrade to continue.', 402);
 
   if (busy()) {
     return Response.json({ error: 'Our servers are very busy right now. Please try again in a minute.' }, { status: 503, headers: { 'Retry-After': '60' } });

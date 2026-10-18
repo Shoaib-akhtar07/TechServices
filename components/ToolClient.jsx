@@ -161,7 +161,7 @@ export default function ToolClient({ slug }) {
       used.add(n);
       zip.file(n, r.blob);
     }
-    download({ name: `${slug}-nexpdf.zip`, blob: await zip.generateAsync({ type: 'blob' }) });
+    download({ name: `${slug}-softservices.zip`, blob: await zip.generateAsync({ type: 'blob' }) });
   };
 
   const reset = () => {
@@ -175,8 +175,8 @@ export default function ToolClient({ slug }) {
   // ---------- result view ----------
   if (status === 'done') {
     return (
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-10">
-        <h2 className="text-center text-2xl font-bold">Your files are ready 🎉</h2>
+      <div className="rounded-3xl card p-6 sm:p-10">
+        <h2 className="text-center text-3xl font-semibold">Your files are ready 🎉</h2>
         <p className="mt-2 text-center text-slate-600 dark:text-slate-400">
           {premium ? 'Processed on our secure server — your files have already been deleted.' : 'Processed locally on your device — nothing was uploaded.'}
         </p>
@@ -254,7 +254,7 @@ export default function ToolClient({ slug }) {
   const working = status === 'working';
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
-      <div className="rounded-3xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 sm:p-6">
+      <div className="rounded-3xl card p-4 sm:p-6">
         <div className="mb-4 flex items-center justify-between">
           <p className="font-semibold">{files.length} file{files.length > 1 ? 's' : ''} selected</p>
           {tool.multiple && (
@@ -294,8 +294,8 @@ export default function ToolClient({ slug }) {
         </ul>
       </div>
 
-      <aside className="flex flex-col rounded-3xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
-        <h2 className="mb-4 text-lg font-bold">{tool.name} options</h2>
+      <aside className="flex flex-col rounded-3xl card p-6">
+        <h2 className="mb-4 text-2xl font-semibold">{tool.name} options</h2>
         <div className="flex-1 space-y-5">
           {tool.options.filter((o) => visible(o, opts)).map((o) => (
             <Option key={o.id} opt={o} value={opts[o.id]} onChange={(v) => set(o.id, v)} />

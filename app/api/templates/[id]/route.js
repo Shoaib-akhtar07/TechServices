@@ -10,6 +10,6 @@ export async function GET(req, { params }) {
   if (!tpl) return Response.json({ error: 'Template not found.' }, { status: 404 });
   const { user, pro } = await getAccess();
   if (!user) return Response.json({ error: 'Please log in to use Pro templates.' }, { status: 401 });
-  if (!pro) return Response.json({ error: 'This template is part of NexPDF Pro.' }, { status: 402 });
+  if (!pro) return Response.json({ error: 'This template is part of SoftServices Pro.' }, { status: 402 });
   return Response.json(tpl, { headers: { 'Cache-Control': 'private, no-store' } });
 }

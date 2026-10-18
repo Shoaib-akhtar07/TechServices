@@ -46,7 +46,7 @@ export default function Post({ params }) {
       <nav className="text-sm text-slate-500" aria-label="Breadcrumb">
         <Link href="/" className="hover:text-brand-600">Home</Link> › <Link href="/blog/" className="hover:text-brand-600">Blog</Link>
       </nav>
-      <h1 className="mt-6 text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl">{post.title}</h1>
+      <h1 className="mt-6 text-4xl font-semibold leading-tight sm:text-5xl">{post.title}</h1>
       <time dateTime={post.date} className="mt-3 block text-sm text-slate-500">
         {new Date(post.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
       </time>
@@ -55,7 +55,7 @@ export default function Post({ params }) {
       </div>
       {tool && (
         <div className="mt-12 rounded-3xl bg-brand-600 p-8 text-center text-white">
-          <h2 className="text-2xl font-bold">Try {tool.name} now</h2>
+          <h2 className="text-3xl font-semibold">Try {tool.name} now</h2>
           <p className="mt-2 text-brand-100">{tool.short}</p>
           <Link href={`/${tool.slug}/`} className="mt-6 inline-block rounded-xl bg-white px-6 py-3 font-semibold text-brand-700 hover:bg-brand-50">
             Open {tool.name}

@@ -56,7 +56,7 @@ const MIME = {
 export async function POST(req) {
   const { user, pro } = await getAccess();
   if (!user) return fail('Please log in to download your file.', 401);
-  if (!pro) return fail('Creating documents is part of NexPDF Pro. Please upgrade to continue.', 402);
+  if (!pro) return fail('Creating documents is part of SoftServices Pro. Please upgrade to continue.', 402);
   if (Number(req.headers.get('content-length') || 0) > MAX_BYTES) return fail('This document is too large to export (25 MB max). Try smaller images.', 413);
 
   let body;

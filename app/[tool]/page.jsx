@@ -112,7 +112,7 @@ export default function ToolPage({ params }) {
           <span className={`mx-auto mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl text-white ${cat.color}`}>
             <ToolIcon name={tool.icon} className="h-7 w-7" />
           </span>
-          <h1 className="text-3xl font-extrabold tracking-tight sm:text-5xl">{tool.name}</h1>
+          <h1 className="text-4xl font-semibold sm:text-6xl">{tool.name}</h1>
           {premium && <ProBadge className="mt-3" />}
           <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-600 dark:text-slate-400">{tool.description}</p>
         </div>
@@ -120,7 +120,7 @@ export default function ToolPage({ params }) {
       </section>
 
       <article className="mx-auto mt-20 max-w-4xl px-4">
-        <h2 className="text-2xl font-bold">
+        <h2 className="text-3xl font-semibold">
           How to {action(tool.name)} online{premium ? '' : ' for free'}
         </h2>
         <ol className="mt-6 space-y-4">
@@ -134,7 +134,7 @@ export default function ToolPage({ params }) {
 
         <div className="mt-12 grid gap-4 sm:grid-cols-3">
           {perks.map(([t, d]) => (
-            <div key={t} className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+            <div key={t} className="rounded-2xl card p-5">
               <CheckCircle2 className="h-6 w-6 text-emerald-500" />
               <h3 className="mt-3 font-semibold">{t}</h3>
               <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{d}</p>
@@ -147,7 +147,7 @@ export default function ToolPage({ params }) {
           <div>
             {editor ? (
               <>
-                <h2 className="font-semibold">How we protect your documents</h2>
+                <h2 className="text-xl font-semibold">How we protect your documents</h2>
                 <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
                   You write in your own browser and your draft is saved only on this device. When you download, the content travels over encrypted HTTPS, the
                   file is generated in memory for signed-in Pro members, and nothing is kept on our servers.
@@ -155,7 +155,7 @@ export default function ToolPage({ params }) {
               </>
             ) : premium ? (
               <>
-                <h2 className="font-semibold">How we protect your files</h2>
+                <h2 className="text-xl font-semibold">How we protect your files</h2>
                 <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
                   Files travel over encrypted HTTPS, are processed in memory on our server and are deleted the moment your result is ready. Only signed-in Pro
                   members can use this tool, and we never keep copies or look at your documents.
@@ -163,7 +163,7 @@ export default function ToolPage({ params }) {
               </>
             ) : (
               <>
-                <h2 className="font-semibold">Safe {lowerName(tool.name)} with zero uploads</h2>
+                <h2 className="text-xl font-semibold">Safe {lowerName(tool.name)} with zero uploads</h2>
                 <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
                   {SITE.name} uses modern browser technology to {tool.short.charAt(0).toLowerCase() + tool.short.slice(1, -1)} directly on your device. Confidential
                   contracts, IDs and bank statements are never sent across the internet.
@@ -173,10 +173,10 @@ export default function ToolPage({ params }) {
           </div>
         </div>
 
-        <h2 className="mt-16 text-2xl font-bold">Frequently asked questions</h2>
+        <h2 className="mt-16 text-3xl font-semibold">Frequently asked questions</h2>
         <div className="mt-6 space-y-3">
           {faqs.map((f) => (
-            <details key={f.q} className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+            <details key={f.q} className="rounded-2xl card p-5">
               <summary className="cursor-pointer list-none font-semibold">{f.q}</summary>
               <p className="mt-3 text-slate-600 dark:text-slate-400">{f.a}</p>
             </details>
@@ -185,7 +185,7 @@ export default function ToolPage({ params }) {
       </article>
 
       <section className="mx-auto mt-20 max-w-6xl px-4">
-        <h2 className="mb-6 text-2xl font-bold">Related tools</h2>
+        <h2 className="mb-6 text-3xl font-semibold">Related tools</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {relatedTools(tool.slug).map((t) => (
             <ToolCard key={t.slug} tool={t} />

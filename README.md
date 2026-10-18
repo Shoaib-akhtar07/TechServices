@@ -1,4 +1,4 @@
-# NexPDF – Free + Pro online PDF tools
+# SoftServices – Free + Pro online PDF tools
 
 - **22 free tools** that run 100% in the browser (no uploads, no account).
 - **9 Pro tools** for subscribers, processed on the server:
@@ -42,7 +42,7 @@ when `NODE_ENV=production`.
 
 ## Stripe setup
 
-1. Stripe Dashboard → **Products** → create “NexPDF Pro” with two recurring prices
+1. Stripe Dashboard → **Products** → create “SoftServices Pro” with two recurring prices
    (monthly $5.99, yearly $47.99) → copy the price IDs into `STRIPE_PRICE_MONTHLY` / `STRIPE_PRICE_YEARLY`.
    If you change prices, also update `lib/plans.js` (display prices).
 2. **Developers → API keys** → `STRIPE_SECRET_KEY`.
@@ -59,8 +59,8 @@ Pro tools need a real Node server (not static hosting). Word/Excel/PowerPoint �
 needs LibreOffice, which the included `Dockerfile` installs.
 
 ```bash
-docker build -t nexpdf .
-docker run -p 3000:3000 -v nexpdf-data:/data --env-file .env nexpdf
+docker build -t softservices .
+docker run -p 3000:3000 -v softservices-data:/data --env-file .env softservices
 ```
 
 Works on any Docker host: Railway, Render, Fly.io, DigitalOcean, a VPS, etc.

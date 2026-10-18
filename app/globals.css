@@ -3,25 +3,49 @@
 @tailwind utilities;
 
 @layer base {
-  html { -webkit-tap-highlight-color: transparent; }
+  html { -webkit-tap-highlight-color: transparent; scroll-behavior: smooth; }
   body {
-    @apply bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
-    font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    @apply bg-cream-100 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+    /* Warm glow at the top of every page, behind the floating header. */
+    background-image: linear-gradient(to bottom, #f6efe3, rgba(250, 247, 241, 0) 640px);
+    background-repeat: no-repeat;
+    font-family: var(--font-display), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
   }
+  .dark body { background-image: radial-gradient(ellipse at top, rgba(154, 118, 70, 0.16), transparent 640px); }
+  /* Page and section headings use the serif display face. */
+  h1, h2 { font-family: var(--font-serif), Georgia, serif; letter-spacing: -0.01em; }
+}
+
+@keyframes home-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.9); }
+  to { opacity: 1; transform: none; }
 }
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white shadow-lg shadow-brand-600/20 transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-70;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-ink via-[#1d2129] to-[#5c4128] px-6 py-3 font-medium text-white shadow-btn transition duration-200 hover:-translate-y-0.5 hover:shadow-btn-hover active:translate-y-0 active:shadow-btn disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0 disabled:hover:shadow-btn dark:shadow-card-dark;
   }
   .btn-secondary {
-    @apply inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-6 py-3 font-semibold text-slate-800 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-900/80 bg-white/70 px-6 py-3 font-medium text-slate-900 shadow-btn-light transition duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-btn-light-hover active:translate-y-0 dark:border-white/30 dark:bg-white/5 dark:text-white dark:shadow-none dark:hover:bg-white/10;
+  }
+  /* Pro call-to-action. */
+  .btn-gold {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-6 py-3 font-semibold text-white shadow-btn-gold transition duration-200 hover:-translate-y-0.5 hover:shadow-btn-gold-hover active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0;
+  }
+  /* Soft cream card used across the site. */
+  .card {
+    @apply border border-cream-300 bg-white/80 shadow-card dark:border-white/10 dark:bg-slate-900/70 dark:shadow-card-dark;
+  }
+  /* For cards that are links: lift on hover. */
+  .card-hover {
+    @apply transition duration-300 hover:-translate-y-1 hover:border-brand-300 hover:shadow-card-hover dark:hover:border-brand-500/40;
   }
   .icon-btn {
     @apply rounded-md bg-white/90 p-1 text-slate-700 shadow hover:bg-white disabled:opacity-30 dark:bg-slate-700 dark:text-slate-100;
   }
   /* Word/PDF editor page: always looks like paper, also in dark mode */
   .doc-page { font-family: Calibri, 'Segoe UI', Arial, sans-serif; font-size: 15px; line-height: 1.6; }
+  .doc-page h1, .doc-page h2, .doc-page h3 { font-family: inherit; letter-spacing: normal; }
   .doc-page h1 { @apply mb-3 mt-2 text-3xl font-bold; }
   .doc-page h2 { @apply mb-2 mt-6 text-xl font-bold; }
   .doc-page h3 { @apply mb-1 mt-4 text-lg font-semibold; }
@@ -30,7 +54,7 @@
   .doc-page ol { @apply mb-3 list-decimal pl-7; }
   .doc-page ul ul { list-style-type: circle; }
   .doc-page hr { @apply my-4 border-slate-300; }
-  .prose-content h2 { @apply mb-3 mt-10 text-2xl font-bold; }
+  .prose-content h2 { @apply mb-3 mt-10 text-3xl font-semibold; }
   .prose-content h3 { @apply mb-2 mt-6 text-lg font-semibold; }
   .prose-content p { @apply mb-4 leading-relaxed text-slate-700 dark:text-slate-300; }
   .prose-content ul { @apply mb-4 list-disc space-y-1 pl-6 text-slate-700 dark:text-slate-300; }
