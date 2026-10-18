@@ -20,7 +20,7 @@ export async function POST(req) {
     line_items: [{ price, quantity: 1 }],
     subscription_data: { metadata: { userId: user.id } },
     allow_promotion_codes: true,
-    success_url: `${origin}/account/?checkout=success`,
+    success_url: `${origin}/account/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/pricing/`,
   });
   return Response.json({ url: session.url });

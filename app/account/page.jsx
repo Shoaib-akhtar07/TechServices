@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Crown } from 'lucide-react';
 import { getAccess, testBillingEnabled } from '@/lib/server/auth';
+import { syncCheckoutSession } from '@/lib/server/stripe';
 import { DAILY_LIMIT, usageToday } from '@/lib/server/usage';
 import { PLANS } from '@/lib/plans';
 import { TOOLS } from '@/lib/tools';
@@ -14,8 +15,12 @@ export const dynamic = 'force-dynamic';
 const fmtDate = (d) => new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
 export default async function Account({ searchParams }) {
-  const { user, sub, pro } = await getAccess();
+  let { user, sub, pro } = await getAccess();
   if (!user) redirect('/login/?next=/account/');
+  // Back from Stripe Checkout: activate Pro now instead of waiting for the webhook.
+  if (!pro && searchParams?.checkout === 'success' && (await syncCheckoutSession(searchParams.session_id, user.id))) {
+    ({ user, sub, pro } = await getAccess());
+  }
   const used = pro ? await usageToday(user.id) : 0;
 
   return (
