@@ -1,0 +1,8 @@
+node_modules
+.next
+out
+public/pdf.worker.min.js
+
+.env
+prisma/*.db
+prisma/*.db-journal
