@@ -5,8 +5,8 @@ import {
   Undo2, Redo2, Minus, RemoveFormatting, LayoutTemplate, FilePlus2, Download, Loader2,
 } from 'lucide-react';
 import { FREE_TEMPLATES } from '@/lib/templates/free';
-import { parseBlocks, toDocx, toPdf } from '@/lib/editors/export-doc';
-import { ToolBtn, Sep, TopBar, TemplatePicker, downloadBlob, draft, safeName } from './common';
+import { parseBlocks } from '@/lib/editors/export-doc';
+import { ToolBtn, Sep, TopBar, TemplatePicker, downloadBlob, draft, safeName, serverExport } from './common';
 
 const BLOCKS = [
   { tag: 'p', label: 'Normal text' },
@@ -96,11 +96,10 @@ export default function DocEditor({ mode = 'doc' }) {
     try {
       const blocks = parseBlocks(ref.current);
       const file = safeName(name, 'document');
-      if (fmt === 'docx') downloadBlob(await toDocx(blocks, name), `${file}.docx`);
-      else downloadBlob(await toPdf(blocks, { pageSize, title: name }), `${file}.pdf`);
+      if (fmt === 'docx') downloadBlob(await serverExport('docx', { blocks, title: name }), `${file}.docx`);
+      else downloadBlob(await serverExport('doc-pdf', { blocks, pageSize, title: name }), `${file}.pdf`);
     } catch (e) {
-      console.error(e);
-      alert('Sorry, the file could not be created. Please try again.');
+      alert(e.message);
     } finally {
       setBusy('');
     }

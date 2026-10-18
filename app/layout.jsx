@@ -1,9 +1,13 @@
 import './globals.css';
+import { Cormorant_Garamond, Jost } from 'next/font/google';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import JsonLd from '@/components/JsonLd';
 import Providers from '@/components/Providers';
 import { SITE } from '@/lib/site';
+
+const serif = Cormorant_Garamond({ subsets: ['latin'], weight: ['400', '500', '600'], style: ['normal', 'italic'], variable: '--font-serif', display: 'swap' });
+const display = Jost({ subsets: ['latin'], weight: ['300', '400', '500', '600'], variable: '--font-display', display: 'swap' });
 
 export const metadata = {
   metadataBase: new URL(SITE.url),
@@ -45,7 +49,7 @@ const themeScript = `try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={`${serif.variable} ${display.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <JsonLd

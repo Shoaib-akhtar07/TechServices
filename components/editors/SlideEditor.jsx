@@ -2,8 +2,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Plus, Copy, Trash2, ChevronUp, ChevronDown, ImagePlus, X, LayoutTemplate, Download, Loader2 } from 'lucide-react';
 import { FREE_TEMPLATES } from '@/lib/templates/free';
-import { THEMES, LAYOUTS, toPptx, toSlidesPdf } from '@/lib/editors/export-slides';
-import { ToolBtn, TopBar, TemplatePicker, downloadBlob, draft, safeName } from './common';
+import { THEMES, LAYOUTS } from '@/lib/editors/export-slides';
+import { ToolBtn, TopBar, TemplatePicker, downloadBlob, draft, safeName, serverExport } from './common';
 
 const KEY = 'nexpdf-draft-slides';
 const clone = (o) => JSON.parse(JSON.stringify(o));
@@ -101,11 +101,10 @@ export default function SlideEditor() {
     setBusy(fmt);
     try {
       const file = safeName(name, 'presentation');
-      if (fmt === 'pptx') downloadBlob(await toPptx(deck, name), `${file}.pptx`);
-      else downloadBlob(await toSlidesPdf(deck, name), `${file}.pdf`);
+      if (fmt === 'pptx') downloadBlob(await serverExport('pptx', { deck, title: name }), `${file}.pptx`);
+      else downloadBlob(await serverExport('slides-pdf', { deck, title: name }), `${file}.pdf`);
     } catch (e) {
-      console.error(e);
-      alert('Sorry, the file could not be created. Please try again.');
+      alert(e.message);
     } finally {
       setBusy('');
     }

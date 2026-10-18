@@ -48,7 +48,7 @@ export default function ToolPage({ params }) {
     ? [
         ['Real Office files', 'Downloads open in Microsoft Office, Google Docs, LibreOffice and WPS.'],
         ['Auto-saved draft', 'Close the tab and come back — your draft is still here, in this browser.'],
-        ['Nothing uploaded', 'You type and export entirely on your own device.'],
+        ['Private by design', 'Drafts stay in your browser. Files are built on our server when you download and never stored.'],
       ]
     : premium
     ? [
@@ -116,7 +116,7 @@ export default function ToolPage({ params }) {
           {premium && <ProBadge className="mt-3" />}
           <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-600 dark:text-slate-400">{tool.description}</p>
         </div>
-        <div className="mt-10">{editor ? <EditorLoader kind={editor} /> : <ToolClient slug={tool.slug} />}</div>
+        <div className="mt-10">{editor ? <EditorLoader kind={editor} name={tool.name} slug={tool.slug} /> :<ToolClient slug={tool.slug} />}</div>
       </section>
 
       <article className="mx-auto mt-20 max-w-4xl px-4">
@@ -145,7 +145,15 @@ export default function ToolPage({ params }) {
         <div className="mt-12 flex gap-4 rounded-2xl bg-emerald-50 p-6 dark:bg-emerald-500/10">
           <ShieldCheck className="h-8 w-8 shrink-0 text-emerald-600" />
           <div>
-            {premium ? (
+            {editor ? (
+              <>
+                <h2 className="font-semibold">How we protect your documents</h2>
+                <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
+                  You write in your own browser and your draft is saved only on this device. When you download, the content travels over encrypted HTTPS, the
+                  file is generated in memory for signed-in Pro members, and nothing is kept on our servers.
+                </p>
+              </>
+            ) : premium ? (
               <>
                 <h2 className="font-semibold">How we protect your files</h2>
                 <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">

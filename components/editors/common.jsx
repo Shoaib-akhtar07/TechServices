@@ -16,7 +16,24 @@ export function downloadBlob(blob, name) {
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
-export const safeName = (s, fallback) => (String(s || '').trim().replace(/[\\/:*?"<>|]+/g, '-').slice(0, 80) || fallback);
+/** Files are generated on the server, which checks the Pro subscription first. */
+export async function serverExport(kind, payload) {
+  const res = await fetch('/api/editor/export/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ kind, ...payload }),
+  });
+  if (!res.ok) {
+    let msg = 'Sorry, the file could not be created. Please try again.';
+    try {
+      msg = (await res.json()).error || msg;
+    } catch {}
+    throw new Error(msg);
+  }
+  return res.blob();
+}
+
+export const safeName =(s, fallback) => (String(s || '').trim().replace(/[\\/:*?"<>|]+/g, '-').slice(0, 80) || fallback);
 
 // Drafts live only in this browser (per-viewer convenience); every access can fail in private mode.
 export const draft = {

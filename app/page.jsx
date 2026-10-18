@@ -17,7 +17,7 @@ const FEATURES = [
 ];
 
 const FAQS = [
-  { q: 'What is NexPDF?', a: `NexPDF is a collection of ${TOOLS.filter((t) => !t.premium).length} free online tools for working with PDF files and images — merge, split, compress, convert, sign, watermark, number pages and more. You can also create Word, Excel, PowerPoint and PDF files from scratch, right in your browser. Pro adds Office conversions, OCR, PDF passwords and premium templates.` },
+  { q: 'What is NexPDF?', a: `NexPDF is a collection of ${TOOLS.filter((t) => !t.premium).length} free online tools for working with PDF files and images — merge, split, compress, convert, sign, watermark, number pages and more. Pro adds online Word, Excel, PowerPoint and PDF editors, Office conversions, OCR, PDF passwords and premium templates.` },
   { q: 'Do I need to install anything or create an account?', a: 'No. Every tool runs in your web browser. Just open a tool, add your files and download the result.' },
   { q: 'Are my documents uploaded to a server?', a: 'Not with the free tools. Unlike most online PDF services, NexPDF’s free tools process files locally on your device using your browser, so your documents never leave your computer or phone. Pro tools (Office conversions, OCR, passwords) run on our server over encrypted HTTPS, and files are deleted as soon as the result is ready.' },
   { q: 'Is there a file size limit?', a: 'There is no artificial limit. Very large files depend on your device’s memory, but typical documents of several hundred pages work well.' },
@@ -44,27 +44,45 @@ export default function Home() {
         }}
       />
 
-      <section className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,rgba(79,107,255,0.18),transparent_60%)]" />
-        <div className="mx-auto max-w-4xl px-4 pb-12 pt-16 text-center sm:pt-24">
-          <p className="mb-5 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-1.5 text-sm font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
-            <ShieldCheck className="h-4 w-4" /> Your files never leave your device
+      {/* Pulled up behind the floating header so the cream background reaches the top of the page. */}
+      <section className="relative -mt-20 overflow-hidden bg-gradient-to-b from-[#f6efe3] via-[#faf7f1] to-slate-50 pt-20 font-display dark:from-[#16120d] dark:via-slate-950 dark:to-slate-950">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.9),transparent_55%)] dark:bg-[radial-gradient(ellipse_at_top,rgba(154,118,70,0.18),transparent_55%)]" />
+        <div className="relative mx-auto max-w-5xl px-4 pb-20 pt-14 text-center sm:pt-20">
+          <p
+            aria-hidden="true"
+            className="bg-gradient-to-r from-slate-800 from-40% to-bronze-500 bg-clip-text pl-[0.45em] text-4xl font-light tracking-[0.45em] text-transparent dark:from-white dark:via-slate-200 dark:to-bronze-300 sm:text-7xl"
+          >
+            NEXPDF
           </p>
-          <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl">
-            Every PDF tool you need,
-            <span className="block bg-gradient-to-r from-brand-600 to-violet-500 bg-clip-text text-transparent">free, fast & private</span>
+          <h1 className="mt-8 font-serif text-4xl font-semibold leading-[1.05] tracking-tight text-slate-900 dark:text-white sm:text-6xl lg:text-7xl">
+            All Your PDF Work{' '}
+            <span className="bg-gradient-to-r from-slate-800 via-slate-700 to-bronze-500 bg-clip-text text-transparent dark:from-slate-100 dark:to-bronze-300">in One Place.</span>
+            <span className="mt-2 block font-normal text-slate-800 dark:text-slate-200">Free, Fast &amp; Private.</span>
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-600 dark:text-slate-400">
+          <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-slate-600 dark:text-slate-400 sm:text-xl">
             Merge, split, compress, convert, sign and edit PDFs in seconds — right in your browser. No uploads, no sign-up, no watermarks.
           </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link href="/merge-pdf/" className="btn-primary">Merge PDF</Link>
-            <Link href="/compress-pdf/" className="btn-secondary">Compress PDF</Link>
+          <div className="mx-auto mt-10 grid max-w-xl gap-4 sm:grid-cols-2">
+            <Link
+              href="/merge-pdf/"
+              className="rounded-xl bg-gradient-to-r from-[#141a24] via-[#1d2129] to-[#5c4128] px-8 py-4 text-[17px] font-medium text-white shadow-xl shadow-bronze-900/25 transition hover:-translate-y-0.5 hover:shadow-2xl"
+            >
+              Merge PDF now
+            </Link>
+            <Link
+              href="#tools"
+              className="rounded-xl border border-slate-900/80 bg-white/70 px-8 py-4 text-[17px] font-medium text-slate-900 transition hover:-translate-y-0.5 hover:bg-white dark:border-white/30 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+            >
+              Explore all <span className="text-bronze-500 dark:text-bronze-300">tools</span>
+            </Link>
           </div>
+          <p className="mt-8 inline-flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+            <ShieldCheck className="h-4 w-4 text-emerald-600" /> Your files never leave your device
+          </p>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4" aria-labelledby="tools-heading">
+      <section id="tools" className="mx-auto max-w-7xl scroll-mt-28 px-4" aria-labelledby="tools-heading">
         <h2 id="tools-heading" className="sr-only">All PDF tools</h2>
         <ToolGrid />
       </section>

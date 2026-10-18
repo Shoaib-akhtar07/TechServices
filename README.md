@@ -3,9 +3,10 @@
 - **22 free tools** that run 100% in the browser (no uploads, no account).
 - **9 Pro tools** for subscribers, processed on the server:
   PDF ↔ Word/Excel/PowerPoint, OCR, Protect PDF, Unlock PDF.
-- **4 document editors** (Create Word / Excel / PowerPoint / PDF) that run in the browser,
-  auto-save a draft in `localStorage` and export real .docx / .xlsx / .csv / .pptx / .pdf files.
-  Free templates for everyone; premium templates for Pro members.
+- **4 document editors** for Pro members (Create Word / Excel / PowerPoint / PDF). Editing runs
+  in the browser with a draft auto-saved in `localStorage`; the .docx / .xlsx / .csv / .pptx / .pdf
+  file is built on the server. The Excel editor has 140+ formulas, multiple sheets, number formats,
+  fill handle and Excel keyboard shortcuts (Ctrl+/ lists them).
 - Accounts (NextAuth, email + password), Stripe subscriptions (monthly / yearly),
   SQLite database via Prisma.
 
@@ -30,6 +31,9 @@ when `NODE_ENV=production`.
 - The lock screen in the UI is only for convenience; the server is the real gate.
 - Subscription status comes from Stripe webhooks (`app/api/stripe/webhook`), so cancelling,
   failed payments and renewals update automatically.
+- Editor files are built only by `POST /api/editor/export/`, with the same session + subscription
+  check (401 / 402). The request body is validated and capped at 25 MB, and each export counts
+  toward the daily fair-use limit.
 - Premium template content is never shipped in the page bundle. It lives in
   `lib/server/pro-templates.js` and is served by `GET /api/templates/<id>/` with the same checks.
 - Fair use: each Pro user can process `PRO_DAILY_LIMIT` files per UTC day (default 200, shown on
@@ -88,11 +92,14 @@ Set `NEXTAUTH_URL` to your real domain and remove the `ENABLE_TEST_BILLING` line
 ```
 app/[tool]/page.jsx          every tool page (SEO + schema)
 app/api/premium/[tool]       Pro processing (auth + subscription check)
+app/api/editor/export        editor downloads (auth + subscription check)
 app/api/stripe/*             checkout, billing portal, webhook
 app/pricing, login, signup, account
-components/ToolClient        upload → options → process → download (+ Pro gate)
+components/ToolClient        upload → options → process → download
+components/ProGate           lock screen for Pro tools and editors
 components/editors/*         Word / Excel / PowerPoint / PDF editors + template picker
-lib/editors/*                editor exports (docx, xlsx/csv, pptx, pdf) and formula engine
+lib/editors/*                editor exports (docx, xlsx/csv, pptx, pdf), formula engine
+                             (formula.js), number formats (numfmt.js), sheet operations (sheet-model.js)
 lib/templates/*              template catalog + free template content
 lib/server/pro-templates.js  premium template content (subscribers only)
 lib/server/usage.js          daily fair-use counter
