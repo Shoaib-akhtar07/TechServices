@@ -2,8 +2,8 @@ import Link from 'next/link';
 import { ShieldCheck, Zap, Infinity as InfinityIcon, Smartphone, Moon, Package, Crown } from 'lucide-react';
 import ToolGrid from '@/components/ToolGrid';
 import JsonLd from '@/components/JsonLd';
-import { TOOLS } from '@/lib/tools';
 import { SITE } from '@/lib/site';
+import { getSite, listTools } from '@/lib/server/content';
 
 export const metadata = { alternates: { canonical: '/' } };
 
@@ -16,15 +16,17 @@ const FEATURES = [
   { icon: Moon, title: 'Dark mode', text: 'Easy on the eyes at night, with a theme that follows your system settings.' },
 ];
 
-const FAQS = [
-  { q: 'What is SoftServices?', a: `SoftServices is a collection of ${TOOLS.filter((t) => !t.premium).length} free online tools for working with PDF files and images — merge, split, compress, convert, sign, watermark, number pages and more. Pro adds online Word, Excel, PowerPoint and PDF editors, Office conversions, OCR, PDF passwords and premium templates.` },
+const faqs = (tools) => [
+  { q: 'What is SoftServices?', a: `SoftServices is a collection of ${tools.filter((t) => !t.premium).length} free online tools for working with PDF files and images — merge, split, compress, convert, sign, watermark, number pages and more. Pro adds online Word, Excel, PowerPoint and PDF editors, Office conversions, OCR, PDF passwords and premium templates.` },
   { q: 'Do I need to install anything or create an account?', a: 'No. Every tool runs in your web browser. Just open a tool, add your files and download the result.' },
   { q: 'Are my documents uploaded to a server?', a: 'Not with the free tools. Unlike most online PDF services, SoftServices’s free tools process files locally on your device using your browser, so your documents never leave your computer or phone. Pro tools (Office conversions, OCR, passwords) run on our server over encrypted HTTPS, and files are deleted as soon as the result is ready.' },
   { q: 'Is there a file size limit?', a: 'There is no artificial limit. Very large files depend on your device’s memory, but typical documents of several hundred pages work well.' },
   { q: 'Can I use SoftServices offline?', a: 'Once a tool page has loaded, processing does not need an internet connection, because all the work happens on your device.' },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const [{ freeMode }, TOOLS] = await Promise.all([getSite(), listTools()]);
+  const FAQS = faqs(TOOLS);
   return (
     <>
       <JsonLd
@@ -108,15 +110,21 @@ export default function Home() {
           <div className="grid items-center gap-10 lg:grid-cols-2">
             <div>
               <p className="inline-flex items-center gap-2 rounded-full bg-amber-400/15 px-3 py-1 text-sm font-semibold text-amber-300">
-                <Crown className="h-4 w-4" /> SoftServices Pro
+                <Crown className="h-4 w-4" /> {freeMode ? 'Free with an account' : 'SoftServices Pro'}
               </p>
-              <h2 className="mt-4 text-4xl font-semibold sm:text-5xl">Need Word, Excel or OCR? Go Pro.</h2>
+              <h2 className="mt-4 text-4xl font-semibold sm:text-5xl">{freeMode ? 'Word, Excel and OCR — free.' : 'Need Word, Excel or OCR? Go Pro.'}</h2>
               <p className="mt-4 text-slate-300">
                 Convert PDFs to editable Office files and back, turn scans into searchable text, and lock documents with AES-256 passwords.
               </p>
-              <Link href="/pricing/" className="mt-8 btn-gold">
-                <Crown className="h-5 w-5" /> See plans — from $4/month
-              </Link>
+              {freeMode ? (
+                <Link href="/signup/" className="mt-8 btn-gold">
+                  Create a free account
+                </Link>
+              ) : (
+                <Link href="/pricing/" className="mt-8 btn-gold">
+                  <Crown className="h-5 w-5" /> See plans — from $4/month
+                </Link>
+              )}
             </div>
             <ul className="grid grid-cols-2 gap-3 text-sm">
               {TOOLS.filter((t) => t.premium).map((t) => (

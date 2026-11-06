@@ -1,9 +1,27 @@
+'use client';
 import Link from 'next/link';
 import { Lock, Crown, Check } from 'lucide-react';
 import { PRO_FEATURES } from '@/lib/plans';
+import { useFreeMode } from './Providers';
 
 /** Lock screen shown in place of a Pro tool or editor. The server enforces access separately. */
 export default function ProGate({ name, slug, loggedIn }) {
+  const freeMode = useFreeMode();
+  if (freeMode) {
+    return (
+      <div className="rounded-3xl card p-8 text-center sm:p-12">
+        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-600 text-white">
+          <Lock className="h-7 w-7" />
+        </span>
+        <h2 className="mt-5 text-3xl font-semibold">Log in to use {name}</h2>
+        <p className="mx-auto mt-2 max-w-lg text-slate-600 dark:text-slate-400">It’s completely free — just create an account or log in to continue.</p>
+        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Link href={`/signup/?next=/${slug}/`} className="btn-primary">Create free account</Link>
+          <Link href={`/login/?next=/${slug}/`} className="btn-secondary">Log in</Link>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="relative overflow-hidden rounded-3xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 via-white to-orange-50 p-8 text-center dark:border-amber-500/40 dark:from-amber-500/10 dark:via-slate-900 dark:to-orange-500/10 sm:p-12">
       <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-600 text-white shadow-btn-gold">

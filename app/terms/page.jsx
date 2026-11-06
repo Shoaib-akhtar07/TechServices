@@ -1,7 +1,7 @@
 import StaticPage from '@/components/StaticPage';
 import { SITE } from '@/lib/site';
 
-export const metadata = { title: 'Terms of Use', description: `Terms for using ${SITE.name} online tools.`, alternates: { canonical: '/terms/' } };
+export const metadata = { title: 'Terms of Use', description: `The terms for using ${SITE.name} online PDF and image tools and accounts. Please read them before you use the service.`, alternates: { canonical: '/terms/' } };
 
 export default function Terms() {
   return (

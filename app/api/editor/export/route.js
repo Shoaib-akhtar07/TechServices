@@ -1,5 +1,5 @@
 import { getAccess } from '@/lib/server/auth';
-import { consume, DAILY_LIMIT } from '@/lib/server/usage';
+import { consume, getDailyLimit } from '@/lib/server/usage';
 import { toDocx, toPdf } from '@/lib/editors/export-doc';
 import { toXlsx, toCsv, toSheetPdf } from '@/lib/editors/export-sheet';
 import { toPptx, toSlidesPdf, THEMES, LAYOUTS } from '@/lib/editors/export-slides';
@@ -90,7 +90,7 @@ export async function POST(req) {
     return fail('Sorry, the file could not be created. Please try again.', 500);
   }
 
-  if (!(await consume(user.id))) return fail(`You’ve reached today’s fair-use limit of ${DAILY_LIMIT} Pro files. It resets at midnight UTC.`, 429);
+  if (!(await consume(user.id))) return fail(`You’ve reached today’s fair-use limit of ${await getDailyLimit()} Pro files. It resets at midnight UTC.`, 429);
 
   return new Response(await blob.arrayBuffer(), {
     headers: { 'Content-Type': MIME[ext], 'Content-Disposition': `attachment; filename="export.${ext}"`, 'Cache-Control': 'no-store' },

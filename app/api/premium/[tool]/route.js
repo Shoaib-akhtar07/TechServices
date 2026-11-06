@@ -1,8 +1,7 @@
 import { getAccess } from '@/lib/server/auth';
-import { prisma } from '@/lib/server/db';
 import { SERVER_PROCESSORS, UserError, zipResults } from '@/lib/server/premium';
-import { DAILY_LIMIT, today } from '@/lib/server/usage';
-import { getTool } from '@/lib/tools';
+import { consume } from '@/lib/server/usage';
+import { findTool } from '@/lib/server/content';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -47,20 +46,19 @@ function accepts(name, accept) {
 }
 
 export async function POST(req, { params }) {
-  const tool = getTool(params.tool);
+  const tool = await findTool(params.tool); // null when hidden in Admin → Tools
   if (!tool?.premium || !SERVER_PROCESSORS[tool.slug]) return fail('Unknown tool.', 404);
 
   // Check access before reading the upload body.
-  const { user, pro } = await getAccess();
+  const { user, pro, usage } = await getAccess();
   if (!user) return fail('Please log in to use Pro tools.', 401);
   if (!pro) return fail('This tool is part of SoftServices Pro. Please upgrade to continue.', 402);
 
   if (busy()) {
     return Response.json({ error: 'Our servers are very busy right now. Please try again in a minute.' }, { status: 503, headers: { 'Retry-After': '60' } });
   }
-  const day = today();
-  const used = (await prisma.usage.findUnique({ where: { userId_day: { userId: user.id, day } } }))?.count || 0;
-  if (used >= DAILY_LIMIT) {
+  const DAILY_LIMIT = usage.limit;
+  if (usage.today >= DAILY_LIMIT) {
     return fail(`You’ve reached today’s fair-use limit of ${DAILY_LIMIT} Pro files. It resets at midnight UTC.`, 429);
   }
 
@@ -80,8 +78,8 @@ export async function POST(req, { params }) {
     if (f.size > MAX_BYTES) return fail(`"${f.name}" is larger than 100 MB.`, 413);
     if (!accepts(f.name, tool.accept)) return fail(`"${f.name}" is not a supported file type for ${tool.name}.`, 415);
   }
-  if (used + uploads.length > DAILY_LIMIT) {
-    return fail(`This would go over today’s fair-use limit (${DAILY_LIMIT - used} Pro files left today).`, 429);
+  if (usage.today + uploads.length > DAILY_LIMIT) {
+    return fail(`This would go over today’s fair-use limit (${DAILY_LIMIT - usage.today} Pro files left today).`, 429);
   }
   let options = {};
   try {
@@ -89,11 +87,9 @@ export async function POST(req, { params }) {
   } catch {}
 
   // Count the files up front so parallel requests can't slip past the limit.
-  await prisma.usage.upsert({
-    where: { userId_day: { userId: user.id, day } },
-    create: { userId: user.id, day, count: uploads.length },
-    update: { count: { increment: uploads.length } },
-  });
+  if (!(await consume(user.id, uploads.length))) {
+    return fail(`You’ve reached today’s fair-use limit of ${DAILY_LIMIT} Pro files. It resets at midnight UTC.`, 429);
+  }
 
   try {
     const result = await withTimeout(withSlot(async () => {

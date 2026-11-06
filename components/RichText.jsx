@@ -1,6 +1,10 @@
 import Link from 'next/link';
 
 // Renders "[text](/path/)" links inside a plain string.
+export function RichInline({ text }) {
+  return inline(text);
+}
+
 function inline(text) {
   const parts = text.split(/(\[[^\]]+\]\([^)]+\))/g);
   return parts.map((part, i) => {

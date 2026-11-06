@@ -1,32 +1,32 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { POSTS, getPost } from '@/lib/posts';
-import { getTool } from '@/lib/tools';
+import { findPost, findTool, listPosts } from '@/lib/server/content';
 import { SITE } from '@/lib/site';
 import RichText from '@/components/RichText';
 import JsonLd from '@/components/JsonLd';
 
-export const dynamicParams = false;
+// Posts written later in Admin → Blog render on first visit.
+export const dynamicParams = true;
 
-export function generateStaticParams() {
-  return POSTS.map((p) => ({ slug: p.slug }));
+export async function generateStaticParams() {
+  return (await listPosts()).map((p) => ({ slug: p.slug }));
 }
 
-export function generateMetadata({ params }) {
-  const post = getPost(params.slug);
+export async function generateMetadata({ params }) {
+  const post = await findPost(params.slug);
   if (!post) return {};
   return {
     title: { absolute: `${post.title} | ${SITE.name}` },
     description: post.description,
     alternates: { canonical: `/blog/${post.slug}/` },
-    openGraph: { type: 'article', title: post.title, description: post.description, publishedTime: post.date },
+    openGraph: { type: 'article', title: post.title, description: post.description, publishedTime: post.date, ...(post.coverImageUrl && { images: [post.coverImageUrl] }) },
   };
 }
 
-export default function Post({ params }) {
-  const post = getPost(params.slug);
+export default async function Post({ params }) {
+  const post = await findPost(params.slug);
   if (!post) notFound();
-  const tool = getTool(post.tool);
+  const tool = post.tool ? await findTool(post.tool) : null;
   const url = `${SITE.url}/blog/${post.slug}/`;
   return (
     <article className="mx-auto max-w-3xl px-4 pt-14">
@@ -37,7 +37,7 @@ export default function Post({ params }) {
           headline: post.title,
           description: post.description,
           datePublished: post.date,
-          dateModified: post.date,
+          dateModified: post.updatedAt ? new Date(post.updatedAt).toISOString() : post.date,
           mainEntityOfPage: url,
           author: { '@type': 'Organization', name: SITE.name, url: SITE.url },
           publisher: { '@id': `${SITE.url}/#org` },
@@ -49,7 +49,12 @@ export default function Post({ params }) {
       <h1 className="mt-6 text-4xl font-semibold leading-tight sm:text-5xl">{post.title}</h1>
       <time dateTime={post.date} className="mt-3 block text-sm text-slate-500">
         {new Date(post.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+        {post.readingMinutes ? ` · ${post.readingMinutes} min read` : ''}
       </time>
+      {post.coverImageUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={post.coverImageUrl} alt="" className="mt-8 w-full rounded-3xl object-cover" />
+      )}
       <div className="mt-8">
         <RichText blocks={post.body} />
       </div>

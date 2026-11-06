@@ -1,7 +1,7 @@
 import StaticPage from '@/components/StaticPage';
 import { SITE } from '@/lib/site';
 
-export const metadata = { title: 'Privacy Policy', description: `How ${SITE.name} handles your data and files.`, alternates: { canonical: '/privacy/' } };
+export const metadata = { title: 'Privacy Policy', description: `How ${SITE.name} handles your data and files: browser tools never upload them, and server tools delete them as soon as your download is ready.`, alternates: { canonical: '/privacy/' } };
 
 export default function Privacy() {
   return (

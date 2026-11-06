@@ -7,12 +7,14 @@ import { Menu, X, Moon, Sun, ChevronDown, Crown, User, Home } from 'lucide-react
 import { CATEGORIES, toolsByCategory } from '@/lib/tools';
 import { SITE } from '@/lib/site';
 import Logo from './Logo';
+import { useFreeMode, useTools } from './Providers';
 
 // Account icon and the dark call-to-action at the end of the nav pill.
 function AccountButtons({ onClick }) {
   const { data: session, status } = useSession();
   if (status === 'loading') return <span className="h-11 w-32" />;
   const pro = session?.user?.pro;
+  const freeMode = useFreeMode();
   return (
     <>
       <Link
@@ -23,14 +25,14 @@ function AccountButtons({ onClick }) {
         className="relative hidden rounded-full p-2.5 text-slate-800 transition sm:block hover:bg-slate-900/5 dark:text-slate-200 dark:hover:bg-white/10"
       >
         <User className="h-5 w-5" />
-        {pro && <Crown className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 text-amber-500" />}
+        {pro && !freeMode && <Crown className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 text-amber-500" />}
       </Link>
       <Link
-        href={pro ? '/create-word/' : '/pricing/'}
+        href={pro || freeMode ? '/create-word/' : '/pricing/'}
         onClick={onClick}
         className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-gradient-to-r from-slate-900 via-slate-900 to-bronze-900 px-4 py-2.5 text-[15px] font-medium text-white shadow-btn transition duration-200 hover:-translate-y-px hover:shadow-btn-hover hover:to-bronze-600 sm:px-5 dark:from-white dark:via-white dark:to-bronze-300 dark:text-slate-900"
       >
-        {pro ? 'New document' : <><Crown className="h-4 w-4 text-amber-300 dark:text-bronze-600" /> Go Pro</>}
+        {pro || freeMode ? 'New document' : <><Crown className="h-4 w-4 text-amber-300 dark:text-bronze-600" /> Go Pro</>}
       </Link>
     </>
   );
@@ -71,6 +73,10 @@ export default function Header() {
   const [mega, setMega] = useState(false);
   const close = () => setOpen(false);
   const { data: session } = useSession();
+  const freeMode = useFreeMode();
+  const tools = useTools();
+  const menu = CATEGORIES.map((c) => ({ ...c, tools: toolsByCategory(c.id, tools) })).filter((c) => c.tools.length);
+  const quick = freeMode ? QUICK.filter((l) => l.href !== '/pricing/') : QUICK;
   const onHome = usePathname() === '/';
   return (
     <header className="sticky top-0 z-40 px-3 pt-3 font-display sm:px-4 sm:pt-4">
@@ -104,11 +110,11 @@ export default function Header() {
               {mega && (
                 <div className="absolute inset-x-0 top-full pt-3">
                   <div className={`grid grid-cols-7 gap-5 rounded-3xl p-7 ${glass}`}>
-                    {CATEGORIES.map((c) => (
+                    {menu.map((c) => (
                       <div key={c.id}>
                         <p className={`mb-3 text-xs font-semibold uppercase tracking-[0.15em] ${c.text}`}>{c.name}</p>
                         <ul className="space-y-2">
-                          {toolsByCategory(c.id).map((t) => (
+                          {c.tools.map((t) => (
                             <li key={t.slug}>
                               <Link href={`/${t.slug}/`} onClick={() => setMega(false)} className="text-sm text-slate-700 hover:text-bronze-600 dark:text-slate-300 dark:hover:text-bronze-300">
                                 {t.name}
@@ -122,7 +128,7 @@ export default function Header() {
                 </div>
               )}
             </div>
-            {QUICK.map((l) => (
+            {quick.map((l) => (
               <Link key={l.href} href={l.href} className={linkCls}>
                 {l.label}
               </Link>
@@ -139,11 +145,11 @@ export default function Header() {
 
         {open && (
           <nav className={`absolute inset-x-0 top-full mt-3 max-h-[75vh] overflow-y-auto rounded-3xl p-5 xl:hidden ${glass}`} aria-label="Mobile">
-            {CATEGORIES.map((c) => (
+            {menu.map((c) => (
               <div key={c.id} className="mb-4">
                 <p className={`mb-2 text-xs font-semibold uppercase tracking-[0.15em] ${c.text}`}>{c.name}</p>
                 <div className="grid grid-cols-2 gap-2">
-                  {toolsByCategory(c.id).map((t) => (
+                  {c.tools.map((t) => (
                     <Link key={t.slug} href={`/${t.slug}/`} onClick={close} className="text-sm text-slate-700 dark:text-slate-300">
                       {t.name}
                     </Link>
@@ -155,7 +161,7 @@ export default function Header() {
               <Link href="/" onClick={close} className="inline-flex items-center gap-1.5 text-brand-700 dark:text-brand-300">
                 <Home className="h-4 w-4" /> Home
               </Link>
-              <Link href="/pricing/" onClick={close}>Pricing</Link>
+              {!freeMode && <Link href="/pricing/" onClick={close}>Pricing</Link>}
               <Link href="/blog/" onClick={close}>Blog</Link>
               {session ? <Link href="/account/" onClick={close}>My account</Link> : <Link href="/login/" onClick={close}>Log in</Link>}
             </div>

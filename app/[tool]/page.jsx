@@ -7,9 +7,10 @@ import ToolIcon from '@/components/ToolIcon';
 import JsonLd from '@/components/JsonLd';
 import ProBadge from '@/components/ProBadge';
 import EditorLoader from '@/components/editors/EditorLoader';
-import { TOOLS, COMMON_FAQS, PRO_FAQS, getTool, getCategory, relatedTools } from '@/lib/tools';
+import { TOOLS, COMMON_FAQS, PRO_FAQS, getCategory } from '@/lib/tools';
 import { PLANS } from '@/lib/plans';
 import { SITE } from '@/lib/site';
+import { findTool, getSite, listRelatedTools } from '@/lib/server/content';
 
 export const dynamicParams = false;
 
@@ -23,8 +24,8 @@ export function generateStaticParams() {
   return TOOLS.map((t) => ({ tool: t.slug }));
 }
 
-export function generateMetadata({ params }) {
-  const tool = getTool(params.tool);
+export async function generateMetadata({ params }) {
+  const tool = await findTool(params.tool);
   if (!tool) return {};
   const url = `/${tool.slug}/`;
   return {
@@ -37,12 +38,16 @@ export function generateMetadata({ params }) {
   };
 }
 
-export default function ToolPage({ params }) {
-  const tool = getTool(params.tool);
+export default async function ToolPage({ params }) {
+  // Hidden in Admin → Tools: 404.
+  const tool = await findTool(params.tool);
   if (!tool) notFound();
+  const [{ freeMode }, related] = await Promise.all([getSite(), listRelatedTools(tool.slug)]);
   const cat = getCategory(tool.category);
   const premium = !!tool.premium;
-  const faqs = [...tool.faqs, ...(premium ? PRO_FAQS : COMMON_FAQS)];
+  // In free mode the subscription / cancel questions do not apply.
+  const proFaqs = freeMode ? [{ q: 'Is it free?', a: `Yes. Create a free ${SITE.name} account and use it as much as you like.` }, PRO_FAQS[1]] : PRO_FAQS;
+  const faqs = [...tool.faqs, ...(premium ? proFaqs : COMMON_FAQS)];
   const editor = tool.editor;
   const perks = editor
     ? [
@@ -77,7 +82,7 @@ export default function ToolPage({ params }) {
               applicationCategory: 'UtilitiesApplication',
               operatingSystem: 'Any (web browser)',
               browserRequirements: 'Requires JavaScript',
-              offers: premium
+              offers: premium && !freeMode
                 ? { '@type': 'Offer', price: String(PLANS.monthly.price), priceCurrency: 'USD', category: 'subscription', url: `${SITE.url}/pricing/` }
                 : { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
               publisher: { '@id': `${SITE.url}/#org` },
@@ -121,7 +126,7 @@ export default function ToolPage({ params }) {
 
       <article className="mx-auto mt-20 max-w-4xl px-4">
         <h2 className="text-3xl font-semibold">
-          How to {action(tool.name)} online{premium ? '' : ' for free'}
+          How to {action(tool.name)} online{premium && !freeMode ? '' : ' for free'}
         </h2>
         <ol className="mt-6 space-y-4">
           {tool.steps.map((s, i) => (
@@ -157,7 +162,7 @@ export default function ToolPage({ params }) {
               <>
                 <h2 className="text-xl font-semibold">How we protect your files</h2>
                 <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
-                  Files travel over encrypted HTTPS, are processed in memory on our server and are deleted the moment your result is ready. Only signed-in Pro
+                  Files travel over encrypted HTTPS, are processed in memory on our server and are deleted the moment your result is ready. Only signed-in{freeMode ? '' : ' Pro'}
                   members can use this tool, and we never keep copies or look at your documents.
                 </p>
               </>
@@ -187,7 +192,7 @@ export default function ToolPage({ params }) {
       <section className="mx-auto mt-20 max-w-6xl px-4">
         <h2 className="mb-6 text-3xl font-semibold">Related tools</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {relatedTools(tool.slug).map((t) => (
+          {related.map((t) => (
             <ToolCard key={t.slug} tool={t} />
           ))}
         </div>

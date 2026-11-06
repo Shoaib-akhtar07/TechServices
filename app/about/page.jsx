@@ -1,10 +1,14 @@
 import StaticPage from '@/components/StaticPage';
 import { SITE } from '@/lib/site';
-import { TOOLS } from '@/lib/tools';
+import { getSite, listTools } from '@/lib/server/content';
 
-export const metadata = { title: 'About Us', description: `Learn about ${SITE.name}, the free and private online PDF toolkit.`, alternates: { canonical: '/about/' } };
+export async function generateMetadata() {
+  const [site, tools] = await Promise.all([getSite(), listTools()]);
+  return { title: 'About Us', description: `${SITE.name} is a free, private online toolkit with ${tools.length} PDF and image tools, built by ${site.developer}. Learn how we keep your files safe.`, alternates: { canonical: '/about/' } };
+}
 
-export default function About() {
+export default async function About() {
+  const TOOLS = await listTools();
   return (
     <StaticPage
       title={`About ${SITE.name}`}

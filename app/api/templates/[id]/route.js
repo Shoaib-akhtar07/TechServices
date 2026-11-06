@@ -11,5 +11,6 @@ export async function GET(req, { params }) {
   const { user, pro } = await getAccess();
   if (!user) return Response.json({ error: 'Please log in to use Pro templates.' }, { status: 401 });
   if (!pro) return Response.json({ error: 'This template is part of SoftServices Pro.' }, { status: 402 });
-  return Response.json(tpl, { headers: { 'Cache-Control': 'private, no-store' } });
+  // private: only this subscriber's browser may keep it (never a shared CDN cache).
+  return Response.json(tpl, { headers: { 'Cache-Control': 'private, max-age=3600' } });
 }
