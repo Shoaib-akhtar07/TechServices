@@ -1,0 +1,91 @@
+@base = http://localhost:5087
+# Paste the token from login here:
+@token =
+
+### Register
+POST {{base}}/api/auth/register
+Content-Type: application/json
+
+{ "email": "you@example.com", "password": "password123", "name": "You" }
+
+### Login
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{ "email": "you@example.com", "password": "password123" }
+
+### Me
+GET {{base}}/api/auth/me
+Authorization: Bearer {{token}}
+
+### Plans and payment methods (public)
+GET {{base}}/api/billing/plans
+
+### Stripe checkout
+POST {{base}}/api/billing/stripe/checkout
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "plan": "monthly" }
+
+### PayPal checkout → open the returned url and approve with a PayPal (sandbox) buyer account
+POST {{base}}/api/billing/paypal/checkout
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "plan": "monthly" }
+
+### PayPal: after approving, PayPal redirects to /account/?paypal=success&subscription_id=I-XXXX — paste that id here
+POST {{base}}/api/billing/paypal/sync
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "subscriptionId": "I-XXXX" }
+
+### Submit a manual payment
+POST {{base}}/api/billing/manual
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "plan": "monthly", "method": "JazzCash", "reference": "TX123456" }
+
+### Articles (public)
+GET {{base}}/api/posts?page=1&pageSize=10
+
+### Create article (author/admin)
+POST {{base}}/api/posts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "How to merge PDF files",
+  "description": "Combine PDFs in seconds, free.",
+  "body": "Intro paragraph.\n\n## Steps\n1. Open the tool\n2. Add your files\n\n- Free\n- Private",
+  "tags": ["pdf", "guides"],
+  "published": true
+}
+
+### Admin: settings
+GET {{base}}/api/admin/settings
+Authorization: Bearer {{token}}
+
+### Admin: turn on manual payments and paid mode
+PUT {{base}}/api/admin/settings
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "free_mode": "0",
+  "manual_enabled": "1",
+  "manual_instructions": "Send the amount to Meezan Bank 0000-0000 or JazzCash 0300-0000000 and enter the transaction ID.",
+  "manual_price_monthly": "PKR 1,700",
+  "manual_price_yearly": "PKR 13,500"
+}
+
+### Admin: pending manual payments
+GET {{base}}/api/admin/payments/manual
+Authorization: Bearer {{token}}
+
+### Admin: dashboard
+GET {{base}}/api/admin/stats
+Authorization: Bearer {{token}}

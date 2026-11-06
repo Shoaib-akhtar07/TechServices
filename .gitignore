@@ -1,0 +1,36 @@
+# ---- Secrets: never commit ----
+.env
+.env.*
+!.env.example
+**/appsettings.Development.json
+**/appsettings.Production.json
+
+# ---- Databases / user data ----
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+SoftServices/prisma/
+SoftServices.Api/wwwroot/uploads/
+
+# ---- Next.js frontend ----
+node_modules/
+.next/
+out/
+SoftServices/public/pdf.worker.min.js
+*.tsbuildinfo
+next-env.d.ts
+
+# ---- .NET backend ----
+bin/
+obj/
+*.user
+.vs/
+
+# ---- Misc ----
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.claude/
