@@ -1,12 +1,13 @@
 import Link from 'next/link';
+import { Search, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { api } from '@/lib/server/api';
 import { requireAdmin } from '@/lib/server/admin';
 import { grantProAction, revokeProAction, setRoleAction, deleteUserAction } from '../actions';
 import ConfirmButton from '@/components/admin/ConfirmButton';
-import { Badge, Flash, PageTitle, dangerBtn, fmtDate, input, smallBtn } from '@/components/admin/ui';
+import { Avatar, Badge, EmptyState, Flash, PageTitle, Tabs, dangerBtn, fmtDate, input, panel, primaryBtn, smallBtn } from '@/components/admin/ui';
 
 const PER_PAGE = 25;
-const FILTERS = { all: 'All', pro: 'Pro', free: 'Free', admin: 'Admins', author: 'Authors' };
+const FILTERS = { all: 'All users', pro: 'Pro', free: 'Free', admin: 'Admins', author: 'Authors' };
 const PROVIDER = { stripe: 'Card', paypal: 'PayPal', manual: 'Manual', admin: 'Admin grant' };
 
 export default async function AdminUsers({ searchParams }) {
@@ -21,126 +22,169 @@ export default async function AdminUsers({ searchParams }) {
 
   return (
     <>
-      <PageTitle sub={`${total} user${total === 1 ? '' : 's'}`}>Users</PageTitle>
+      <PageTitle eyebrow="Customers" sub="Everyone with an account. Open a row to give or remove Pro, change roles or delete the account.">
+        Users
+      </PageTitle>
       <Flash searchParams={searchParams} />
 
-      <form className="mb-4 flex flex-wrap gap-2" action="/admin/users/">
-        <input name="q" defaultValue={q} placeholder="Search email or name" className={`${input} max-w-xs`} />
-        <input type="hidden" name="filter" value={filter} />
-        <button className={smallBtn}>Search</button>
-        <div className="ml-auto flex flex-wrap gap-1">
-          {Object.entries(FILTERS).map(([k, label]) => (
-            <Link key={k} href={`/admin/users/?${new URLSearchParams({ ...(q && { q }), filter: k })}`} className={`rounded-full px-3 py-1.5 text-sm ${filter === k ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'text-slate-600 hover:bg-white dark:text-slate-300 dark:hover:bg-white/10'}`}>
-              {label}
-            </Link>
-          ))}
-        </div>
-      </form>
-
-      <div className="space-y-3">
-        {users.map((u) => {
-          const pro = !!u.subscription?.active;
-          const admin = u.admin;
-          const envAdmin = admin && u.role !== 'admin';
-          const sub = u.subscription;
-          return (
-            <details key={u.id} className="rounded-2xl card p-4">
-              <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-1">
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-semibold">{u.email}</span>
-                  <span className="text-xs text-slate-500">
-                    {u.name || 'No name'} · joined {fmtDate(u.createdAt)}
-                  </span>
-                </span>
-                {admin && <Badge tone="blue">Admin</Badge>}
-                {u.role === 'author' && <Badge tone="green">Author</Badge>}
-                {pro ? (
-                  <Badge tone="amber">
-                    Pro · {PROVIDER[sub.provider] || sub.provider} · until {fmtDate(sub.currentPeriodEnd)}
-                  </Badge>
-                ) : (
-                  <Badge>{sub ? `Free (was ${sub.status})` : 'Free'}</Badge>
-                )}
-              </summary>
-
-              <div className="mt-4 grid gap-4 border-t border-slate-900/10 pt-4 md:grid-cols-2 dark:border-white/10">
-                <form action={grantProAction} className="space-y-2">
-                  <p className="text-sm font-semibold">{pro ? 'Add Pro time' : 'Give Pro'}</p>
-                  <input type="hidden" name="userId" value={u.id} />
-                  <input type="hidden" name="back" value={backUrl} />
-                  <div className="flex gap-2">
-                    <select name="plan" className={input} defaultValue="monthly">
-                      <option value="monthly">Monthly</option>
-                      <option value="yearly">Yearly</option>
-                    </select>
-                    <input name="days" type="number" min="1" max="3660" placeholder="Days (30 / 365)" className={input} />
-                  </div>
-                  {pro && ['stripe', 'paypal'].includes(sub.provider) && (
-                    <p className="text-xs text-amber-700 dark:text-amber-300">This replaces their {PROVIDER[sub.provider]} subscription record. Cancel it with “Remove Pro” first if they should not be charged.</p>
-                  )}
-                  <ConfirmButton className={smallBtn}>Give Pro</ConfirmButton>
-                </form>
-
-                <div className="space-y-3">
-                  <p className="text-sm font-semibold">Account</p>
-                  <div className="flex flex-wrap gap-2">
-                    {sub && pro && (
-                      <form action={revokeProAction}>
-                        <input type="hidden" name="userId" value={u.id} />
-                        <input type="hidden" name="back" value={backUrl} />
-                        <ConfirmButton confirm={`Remove Pro from ${u.email}?${['stripe', 'paypal'].includes(sub.provider) ? ` Their ${PROVIDER[sub.provider]} subscription will be cancelled too.` : ''}`} className={smallBtn}>
-                          Remove Pro
-                        </ConfirmButton>
-                      </form>
-                    )}
-                    {!envAdmin && u.id !== me.id && (
-                      <form action={setRoleAction}>
-                        <input type="hidden" name="userId" value={u.id} />
-                        <input type="hidden" name="role" value={admin ? 'user' : 'admin'} />
-                        <input type="hidden" name="back" value={backUrl} />
-                        <ConfirmButton confirm={admin ? `Remove admin access from ${u.email}?` : `Make ${u.email} an admin? They will be able to change payments and users.`} className={smallBtn}>
-                          {admin ? 'Remove admin' : 'Make admin'}
-                        </ConfirmButton>
-                      </form>
-                    )}
-                    {!admin && (
-                      <form action={setRoleAction}>
-                        <input type="hidden" name="userId" value={u.id} />
-                        <input type="hidden" name="role" value={u.role === 'author' ? 'user' : 'author'} />
-                        <input type="hidden" name="back" value={backUrl} />
-                        <ConfirmButton confirm={u.role === 'author' ? `Remove author access from ${u.email}?` : `Let ${u.email} write and publish blog posts?`} className={smallBtn}>
-                          {u.role === 'author' ? 'Remove author' : 'Make author'}
-                        </ConfirmButton>
-                      </form>
-                    )}
-                    {u.id !== me.id && (
-                      <form action={deleteUserAction}>
-                        <input type="hidden" name="userId" value={u.id} />
-                        <input type="hidden" name="back" value={backUrl} />
-                        <ConfirmButton confirm={`Delete ${u.email} permanently? This cannot be undone.`} className={dangerBtn}>
-                          Delete user
-                        </ConfirmButton>
-                      </form>
-                    )}
-                  </div>
-                  {envAdmin && <p className="text-xs text-slate-500">Admin through ADMIN_EMAILS in .env (development only).</p>}
-                  {sub?.stripeSubscriptionId && <p className="break-all text-xs text-slate-500">Stripe: {sub.stripeSubscriptionId}</p>}
-                  {sub?.paypalSubscriptionId && <p className="break-all text-xs text-slate-500">PayPal: {sub.paypalSubscriptionId}</p>}
-                </div>
-              </div>
-            </details>
-          );
-        })}
-        {!users.length && <p className="rounded-2xl card p-6 text-center text-slate-500">No users found.</p>}
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <Tabs items={Object.entries(FILTERS).map(([k, label]) => ({ href: `/admin/users/?${new URLSearchParams({ ...(q && { q }), filter: k })}`, label, active: filter === k }))} />
+        <form className="relative ml-auto w-full sm:w-72" action="/admin/users/">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <input name="q" defaultValue={q} placeholder="Search email or name…" className={`${input} pl-9`} />
+          <input type="hidden" name="filter" value={filter} />
+        </form>
       </div>
 
-      {pages > 1 && (
-        <div className="mt-6 flex items-center justify-center gap-3 text-sm">
-          {page > 1 && <Link href={`/admin/users/${qs({ page: String(page - 1) })}`} className={smallBtn}>← Previous</Link>}
-          <span className="text-slate-500">Page {page} of {pages}</span>
-          {page < pages && <Link href={`/admin/users/${qs({ page: String(page + 1) })}`} className={smallBtn}>Next →</Link>}
+      {users.length ? (
+        <div className={`${panel} overflow-hidden`}>
+          <div className="hidden grid-cols-[minmax(0,1fr)_140px_200px_110px_24px] gap-4 border-b border-slate-100 bg-slate-50/70 px-5 py-2.5 text-xs font-medium uppercase tracking-wider text-slate-500 md:grid dark:border-white/10 dark:bg-white/5">
+            <span>User</span>
+            <span>Role</span>
+            <span>Plan</span>
+            <span>Joined</span>
+            <span />
+          </div>
+          <ul className="divide-y divide-slate-100 dark:divide-white/10">
+            {users.map((u) => {
+              const sub = u.subscription;
+              const pro = !!sub?.active;
+              const admin = u.admin;
+              const envAdmin = admin && u.role !== 'admin';
+              const isMe = u.id === me.id;
+              return (
+                <li key={u.id}>
+                  <details className="group">
+                    <summary className="grid cursor-pointer list-none grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-5 py-3.5 transition hover:bg-slate-50 md:grid-cols-[minmax(0,1fr)_140px_200px_110px_24px] dark:hover:bg-white/5">
+                      <span className="flex min-w-0 items-center gap-3">
+                        <Avatar name={u.name || u.email} />
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-medium text-slate-900 dark:text-white">
+                            {u.name || u.email.split('@')[0]} {isMe && <span className="text-xs font-normal text-slate-400">(you)</span>}
+                          </span>
+                          <span className="block truncate text-xs text-slate-500">{u.email}</span>
+                        </span>
+                      </span>
+                      <span className="hidden md:block">
+                        {admin ? <Badge tone="violet">Admin</Badge> : u.role === 'author' ? <Badge tone="blue">Author</Badge> : <span className="text-sm text-slate-500">User</span>}
+                      </span>
+                      <span className="hidden min-w-0 md:block">
+                        {pro ? (
+                          <span className="block">
+                            <Badge tone="amber" dot>Pro · {PROVIDER[sub.provider] || sub.provider}</Badge>
+                            <span className="mt-0.5 block text-xs text-slate-500">until {fmtDate(sub.currentPeriodEnd)}</span>
+                          </span>
+                        ) : (
+                          <Badge>{sub ? `Free · was ${sub.status.replace('_', ' ')}` : 'Free'}</Badge>
+                        )}
+                      </span>
+                      <span className="hidden text-sm text-slate-500 md:block">{fmtDate(u.createdAt)}</span>
+                      <ChevronDown className="h-4 w-4 text-slate-400 transition group-open:rotate-180" />
+                    </summary>
+
+                    <div className="grid gap-6 border-t border-slate-100 bg-slate-50/60 px-5 py-5 md:grid-cols-2 dark:border-white/10 dark:bg-white/[0.03]">
+                      <form action={grantProAction} className="space-y-3">
+                        <p className="text-sm font-semibold text-slate-900 dark:text-white">{pro ? 'Add Pro time' : 'Give Pro'}</p>
+                        <input type="hidden" name="userId" value={u.id} />
+                        <input type="hidden" name="back" value={backUrl} />
+                        <div className="flex gap-2">
+                          <select name="plan" className={input} defaultValue="monthly">
+                            <option value="monthly">Monthly (30 days)</option>
+                            <option value="yearly">Yearly (365 days)</option>
+                          </select>
+                          <input name="days" type="number" min="1" max="3660" placeholder="Custom days" className={`${input} w-36`} />
+                        </div>
+                        {pro && ['stripe', 'paypal'].includes(sub.provider) && (
+                          <p className="text-xs text-amber-700 dark:text-amber-300">
+                            This replaces their {PROVIDER[sub.provider]} subscription record. Use “Remove Pro” first if they should not be charged again.
+                          </p>
+                        )}
+                        <ConfirmButton className={primaryBtn}>Give Pro</ConfirmButton>
+                      </form>
+
+                      <div className="space-y-3">
+                        <p className="text-sm font-semibold text-slate-900 dark:text-white">Account</p>
+                        <div className="flex flex-wrap gap-2">
+                          {sub && pro && (
+                            <form action={revokeProAction}>
+                              <input type="hidden" name="userId" value={u.id} />
+                              <input type="hidden" name="back" value={backUrl} />
+                              <ConfirmButton
+                                confirm={`Remove Pro from ${u.email}?${['stripe', 'paypal'].includes(sub.provider) ? ` Their ${PROVIDER[sub.provider]} subscription will be cancelled too.` : ''}`}
+                                className={smallBtn}
+                              >
+                                Remove Pro
+                              </ConfirmButton>
+                            </form>
+                          )}
+                          {!envAdmin && !isMe && (
+                            <form action={setRoleAction}>
+                              <input type="hidden" name="userId" value={u.id} />
+                              <input type="hidden" name="role" value={admin ? 'user' : 'admin'} />
+                              <input type="hidden" name="back" value={backUrl} />
+                              <ConfirmButton confirm={admin ? `Remove admin access from ${u.email}?` : `Make ${u.email} an admin? They will be able to change payments and users.`} className={smallBtn}>
+                                {admin ? 'Remove admin' : 'Make admin'}
+                              </ConfirmButton>
+                            </form>
+                          )}
+                          {!admin && (
+                            <form action={setRoleAction}>
+                              <input type="hidden" name="userId" value={u.id} />
+                              <input type="hidden" name="role" value={u.role === 'author' ? 'user' : 'author'} />
+                              <input type="hidden" name="back" value={backUrl} />
+                              <ConfirmButton confirm={u.role === 'author' ? `Remove author access from ${u.email}?` : `Let ${u.email} write and publish blog posts?`} className={smallBtn}>
+                                {u.role === 'author' ? 'Remove author' : 'Make author'}
+                              </ConfirmButton>
+                            </form>
+                          )}
+                          {!isMe && (
+                            <form action={deleteUserAction}>
+                              <input type="hidden" name="userId" value={u.id} />
+                              <input type="hidden" name="back" value={backUrl} />
+                              <ConfirmButton confirm={`Delete ${u.email} permanently? This cannot be undone.`} className={dangerBtn}>
+                                Delete user
+                              </ConfirmButton>
+                            </form>
+                          )}
+                        </div>
+                        <dl className="space-y-1 text-xs text-slate-500">
+                          {envAdmin && <dd>Admin through DevAdminEmails (development only).</dd>}
+                          {sub?.stripeSubscriptionId && <dd className="break-all">Stripe: <span className="font-mono">{sub.stripeSubscriptionId}</span></dd>}
+                          {sub?.paypalSubscriptionId && <dd className="break-all">PayPal: <span className="font-mono">{sub.paypalSubscriptionId}</span></dd>}
+                          <dd className="break-all">User ID: <span className="font-mono">{u.id}</span></dd>
+                        </dl>
+                      </div>
+                    </div>
+                  </details>
+                </li>
+              );
+            })}
+          </ul>
         </div>
+      ) : (
+        <EmptyState title="No users found">{q ? `Nobody matches “${q}”.` : 'Try another filter.'}</EmptyState>
       )}
+
+      <div className="mt-4 flex items-center justify-between text-sm text-slate-500">
+        <span>
+          {total} user{total === 1 ? '' : 's'}
+          {pages > 1 && ` · page ${page} of ${pages}`}
+        </span>
+        {pages > 1 && (
+          <span className="flex gap-2">
+            {page > 1 && (
+              <Link href={`/admin/users/${qs({ page: String(page - 1) })}`} className={smallBtn}>
+                <ChevronLeft className="h-4 w-4" /> Previous
+              </Link>
+            )}
+            {page < pages && (
+              <Link href={`/admin/users/${qs({ page: String(page + 1) })}`} className={smallBtn}>
+                Next <ChevronRight className="h-4 w-4" />
+              </Link>
+            )}
+          </span>
+        )}
+      </div>
     </>
   );
 }

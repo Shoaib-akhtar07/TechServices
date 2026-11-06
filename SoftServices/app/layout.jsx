@@ -6,6 +6,7 @@ import HomeButton from '@/components/HomeButton';
 import JsonLd from '@/components/JsonLd';
 import { RichInline } from '@/components/RichText';
 import Providers from '@/components/Providers';
+import SiteChrome from '@/components/SiteChrome';
 import { SITE } from '@/lib/site';
 import { getSite, listTools } from '@/lib/server/content';
 
@@ -86,15 +87,19 @@ export default async function RootLayout({ children }) {
           Skip to content
         </a>
         <Providers freeMode={site.freeMode} tools={toolList}>
-          {site.announcement && (
-            <p className="bg-ink px-4 py-2 text-center text-sm text-cream-100 dark:bg-brand-900">
-              <RichInline text={site.announcement} />
-            </p>
-          )}
-          <Header />
+          <SiteChrome>
+            {site.announcement && (
+              <p className="bg-ink px-4 py-2 text-center text-sm text-cream-100 dark:bg-brand-900">
+                <RichInline text={site.announcement} />
+              </p>
+            )}
+            <Header />
+          </SiteChrome>
           <main id="main">{children}</main>
-          <Footer />
-          <HomeButton />
+          <SiteChrome>
+            <Footer />
+            <HomeButton />
+          </SiteChrome>
         </Providers>
       </body>
     </html>

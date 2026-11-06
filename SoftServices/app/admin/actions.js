@@ -1,7 +1,7 @@
 'use server';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { api, ApiError, clearSiteCache } from '@/lib/server/api';
+import { api, apiUpload, ApiError, clearSiteCache, toSiteUploadUrl } from '@/lib/server/api';
 import { requireAdmin } from '@/lib/server/admin';
 import { SETTINGS, saveSettings, clearSetting } from '@/lib/server/settings';
 import { getTool } from '@/lib/tools';
@@ -208,13 +208,24 @@ export async function savePostAction(formData) {
   const date = text(formData, 'date', 10);
   if (date && Number.isNaN(new Date(`${date}T00:00:00Z`).getTime())) back(formData, 'The date is not valid.', true);
   const tool = text(formData, 'tool', 80);
+
+  // Cover image: a newly chosen file is uploaded first; "remove" clears it; otherwise keep the URL field.
+  let coverImageUrl = text(formData, 'coverImageUrl', 500) || null;
+  const file = formData.get('coverFile');
+  if (file && typeof file === 'object' && file.size > 0) {
+    if (file.size > 5 * 1024 * 1024) back(formData, 'The cover image can be at most 5 MB.', true);
+    const up = await call(formData, () => apiUpload('/posts/uploads', file));
+    coverImageUrl = toSiteUploadUrl(up.url);
+  }
+  if (checked(formData, 'removeCover')) coverImageUrl = null;
+
   const body = {
     title: text(formData, 'title', 120),
     slug: text(formData, 'slug', 100),
     description: text(formData, 'description', 200),
     body: text(formData, 'body', 50000),
     tool: getTool(tool) ? tool : null,
-    coverImageUrl: text(formData, 'coverImageUrl', 500) || null,
+    coverImageUrl,
     tags: text(formData, 'tags', 300).split(',').map((t) => t.trim()).filter(Boolean),
     published: checked(formData, 'published'),
     ...(date && { publishedAt: `${date}T00:00:00Z` }),

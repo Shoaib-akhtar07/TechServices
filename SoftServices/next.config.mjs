@@ -16,6 +16,8 @@ const nextConfig = {
     ];
   },
   experimental: {
+    // Admin blog form uploads a cover image (up to 5 MB) through a server action.
+    serverActions: { bodySizeLimit: '6mb' },
     // Native / worker-based packages must be loaded by Node directly, not bundled.
     serverComponentsExternalPackages: ['@napi-rs/canvas', 'pdfjs-dist', 'tesseract.js', 'exceljs', 'pptxgenjs', 'docx', '@cantoo/pdf-lib'],
   },

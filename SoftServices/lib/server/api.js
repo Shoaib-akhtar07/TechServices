@@ -55,6 +55,28 @@ export async function api(path, { method = 'GET', body, token, headers: extra } 
   return data;
 }
 
+/** Upload a file (multipart) with the current session's token. Returns the parsed JSON. */
+export async function apiUpload(path, file, field = 'file') {
+  const token = await sessionToken();
+  const form = new FormData();
+  form.append(field, file, file.name || 'upload');
+  const res = await fetch(`${API_URL}/api${path}`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form,
+    cache: 'no-store',
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new ApiError(data?.error || `Upload failed (${res.status})`, res.status, data);
+  return data;
+}
+
+/** API upload URL (http://api-host/uploads/…) → the website's own /uploads/… path. */
+export const toSiteUploadUrl = (url) => {
+  const m = String(url || '').match(/\/uploads\/[^?#]+$/);
+  return m ? m[0] : url;
+};
+
 /** Like api(), but returns null instead of throwing for 401 / 404. */
 export async function apiOrNull(path, opts) {
   try {

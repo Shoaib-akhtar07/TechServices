@@ -5,7 +5,7 @@ import { CATEGORIES, getTool } from '@/lib/tools';
 import { saveToolAction, resetToolAction } from '../actions';
 import ConfirmButton from '@/components/admin/ConfirmButton';
 import ToolIcon from '@/components/ToolIcon';
-import { Badge, BackField, Field, Flash, PageTitle, Toggle, input, smallBtn } from '@/components/admin/ui';
+import { Badge, BackField, Field, Flash, PageTitle, Toggle, input, panel, primaryBtn, smallBtn } from '@/components/admin/ui';
 
 const BACK = '/admin/tools/';
 const FIELDS = [
@@ -23,7 +23,7 @@ export default async function AdminTools({ searchParams }) {
 
   return (
     <>
-      <PageTitle sub={`${tools.length} tools · ${tools.length - hidden} shown · ${hidden} hidden · ${edited} with changes`}>Tools</PageTitle>
+      <PageTitle eyebrow="Content" sub={`${tools.length} tools · ${tools.length - hidden} shown · ${hidden} hidden · ${edited} with changes`}>Tools</PageTitle>
       <Flash searchParams={searchParams} />
       <p className="mb-6 text-sm text-slate-600 dark:text-slate-400">
         Hide a tool to remove it from menus, the home page and the sitemap (its page then shows “not found”). Text left empty uses the original wording.
@@ -41,7 +41,7 @@ export default async function AdminTools({ searchParams }) {
                   const original = getTool(t.slug);
                   const o = overrides[t.slug] || {};
                   return (
-                    <details key={t.slug} className="rounded-2xl card p-4">
+                    <details key={t.slug} className={`${panel} p-4`}>
                       <summary className="flex cursor-pointer list-none flex-wrap items-center gap-3">
                         <ToolIcon name={t.icon} className={`h-5 w-5 ${t.hidden ? 'text-slate-400' : 'text-brand-600'}`} />
                         <span className="min-w-0 flex-1">
@@ -69,7 +69,7 @@ export default async function AdminTools({ searchParams }) {
                         ))}
                         <div className="flex flex-wrap items-center gap-4 sm:col-span-2">
                           <Toggle name="hidden" on={t.hidden} label="Hide this tool from the site" />
-                          <ConfirmButton className="btn-primary !px-5 !py-2 text-sm">Save</ConfirmButton>
+                          <ConfirmButton className={primaryBtn}>Save</ConfirmButton>
                           {!t.hidden && (
                             <Link href={`/${t.slug}/`} target="_blank" className="text-sm font-medium text-brand-700 underline dark:text-brand-300">
                               Open page

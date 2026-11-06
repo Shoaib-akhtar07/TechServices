@@ -2,7 +2,7 @@ import { requireAdmin } from '@/lib/server/admin';
 import { getSettings, paymentMethods } from '@/lib/server/settings';
 import { saveSettingsAction, clearSecretAction, testStripeAction, createStripePricesAction, testPaypalAction, createPaypalPlansAction } from '../actions';
 import ConfirmButton from '@/components/admin/ConfirmButton';
-import { Badge, BackField, Code, Field, Flash, PageTitle, Secret, Section, Toggle, dangerBtn, input, smallBtn } from '@/components/admin/ui';
+import { Badge, BackField, Code, Field, Flash, PageTitle, Secret, Section, Toggle, dangerBtn, input, primaryBtn, smallBtn } from '@/components/admin/ui';
 
 const BACK = '/admin/settings/';
 const Hidden = () => <BackField to={BACK} />;
@@ -15,7 +15,7 @@ export default async function AdminSettings({ searchParams }) {
 
   return (
     <>
-      <PageTitle sub="Everything here is saved in the database. Secret keys are stored encrypted.">Settings</PageTitle>
+      <PageTitle eyebrow="System" sub="Everything here is saved in the database. Secret keys are stored encrypted.">Settings</PageTitle>
       <Flash searchParams={searchParams} />
 
       <div className="space-y-6">
@@ -27,7 +27,7 @@ export default async function AdminSettings({ searchParams }) {
           <form action={saveSettingsAction} className="flex flex-wrap items-center gap-4">
             <Hidden />
             <Toggle name="free_mode" on={s.free_mode === '1'} label="Make the whole site free" />
-            <ConfirmButton className="btn-primary !px-5 !py-2 text-sm">Save</ConfirmButton>
+            <ConfirmButton className={primaryBtn}>Save</ConfirmButton>
           </form>
         </Section>
 
@@ -52,7 +52,7 @@ export default async function AdminSettings({ searchParams }) {
               </Field>
             </div>
             <div className="sm:col-span-2">
-              <ConfirmButton className="btn-primary !px-5 !py-2 text-sm">Save site details</ConfirmButton>
+              <ConfirmButton className={primaryBtn}>Save site details</ConfirmButton>
             </div>
           </form>
         </Section>
@@ -76,7 +76,7 @@ export default async function AdminSettings({ searchParams }) {
               <input name="verify_bing" defaultValue={s.verify_bing} className={input} autoComplete="off" />
             </Field>
             <div className="sm:col-span-2">
-              <ConfirmButton className="btn-primary !px-5 !py-2 text-sm">Save codes</ConfirmButton>
+              <ConfirmButton className={primaryBtn}>Save codes</ConfirmButton>
             </div>
           </form>
         </Section>
@@ -97,7 +97,7 @@ export default async function AdminSettings({ searchParams }) {
               <input name="pro_daily_limit" type="number" min="1" defaultValue={s.pro_daily_limit} className={input} />
             </Field>
             <div className="sm:col-span-4">
-              <ConfirmButton className="btn-primary !px-5 !py-2 text-sm">Save</ConfirmButton>
+              <ConfirmButton className={primaryBtn}>Save</ConfirmButton>
             </div>
           </form>
         </Section>
@@ -129,7 +129,7 @@ export default async function AdminSettings({ searchParams }) {
               <input name="stripe_price_yearly" defaultValue={s.stripe_price_yearly} className={input} />
             </Field>
             <div className="sm:col-span-2">
-              <ConfirmButton className="btn-primary !px-5 !py-2 text-sm">Save Stripe settings</ConfirmButton>
+              <ConfirmButton className={primaryBtn}>Save Stripe settings</ConfirmButton>
             </div>
           </form>
           <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-900/10 pt-4 dark:border-white/10">
@@ -195,7 +195,7 @@ export default async function AdminSettings({ searchParams }) {
               <input name="paypal_plan_yearly" defaultValue={s.paypal_plan_yearly} className={input} />
             </Field>
             <div className="sm:col-span-2">
-              <ConfirmButton className="btn-primary !px-5 !py-2 text-sm">Save PayPal settings</ConfirmButton>
+              <ConfirmButton className={primaryBtn}>Save PayPal settings</ConfirmButton>
             </div>
           </form>
           <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-900/10 pt-4 dark:border-white/10">
@@ -247,7 +247,7 @@ export default async function AdminSettings({ searchParams }) {
               </Field>
             </div>
             <div className="sm:col-span-2">
-              <ConfirmButton className="btn-primary !px-5 !py-2 text-sm">Save manual payment settings</ConfirmButton>
+              <ConfirmButton className={primaryBtn}>Save manual payment settings</ConfirmButton>
             </div>
           </form>
         </Section>
