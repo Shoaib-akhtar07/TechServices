@@ -1,0 +1,46 @@
+# SoftServices on Coolify (or any Docker host): `docker compose up -d --build`.
+#
+# Coolify: New Resource → Public Repository → this repo → Build Pack "Docker Compose",
+# compose file /docker-compose.yml. Coolify gives the website a URL (change it under Domains),
+# generates both secrets below once and keeps them between deploys. Only `web` is public;
+# the API is reachable only inside this stack.
+
+services:
+  web:
+    build:
+      context: ./SoftServices
+    restart: unless-stopped
+    environment:
+      # Coolify: route the public domain to port 3000 of this container.
+      - SERVICE_URL_WEB_3000
+      - NEXTAUTH_URL=${SERVICE_URL_WEB:-http://localhost:3080}
+      - NEXTAUTH_SECRET=${SERVICE_PASSWORD_64_NEXTAUTH:-change-me-local-only-secret-0123456789abcdef}
+      - API_URL=http://api:8080
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
+    depends_on:
+      - api
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/robots.txt').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    # No `ports:` on purpose: Coolify's proxy routes the domain to the container, and publishing a
+    # host port could clash with other projects on the same server. For a local run use
+    # `docker compose -f docker-compose.yml -f docker-compose.local.yml up --build`.
+
+  api:
+    build:
+      context: ./SoftServices.Api
+    restart: unless-stopped
+    environment:
+      - Auth__Secret=${SERVICE_PASSWORD_64_APIAUTH:-change-me-local-only-secret-0123456789abcdef}
+      - App__FrontendUrl=${SERVICE_URL_WEB:-http://localhost:3080}
+      - App__SiteName=SoftServices
+      - ConnectionStrings__Default=Data Source=/data/softservices.db
+    volumes:
+      - api-data:/data
+
+volumes:
+  api-data:

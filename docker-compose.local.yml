@@ -1,0 +1,5 @@
+# Local test only — publishes the website on http://localhost:3080 (not used by Coolify).
+services:
+  web:
+    ports:
+      - "${WEB_PORT:-3080}:3000"
