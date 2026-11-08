@@ -39,6 +39,9 @@ services:
       - App__FrontendUrl=${SERVICE_URL_WEB:-http://localhost:3080}
       - App__SiteName=SoftServices
       - ConnectionStrings__Default=Data Source=/data/softservices.db
+      # First admin account (created on start if missing). Set both in Coolify; password ≥ 12 characters.
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
       # Payment settings used until they are saved in Admin → Settings (which then take priority).
       # Set the PayPal values in Coolify → Environment Variables; never commit keys here.
       - FREE_MODE=${FREE_MODE:-0}

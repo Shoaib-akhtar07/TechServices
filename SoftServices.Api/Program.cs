@@ -99,6 +99,28 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.EnsureCreatedAsync();
 
+    // First admin for a fresh server: ADMIN_EMAIL + ADMIN_PASSWORD (env, e.g. Coolify secrets).
+    // Creates the account if it does not exist. An existing account is only made admin when its
+    // password matches, so nobody can claim the role by registering that email first.
+    var adminEmail = Environment.GetEnvironmentVariable("ADMIN_EMAIL")?.Trim().ToLowerInvariant();
+    var adminPassword = Environment.GetEnvironmentVariable("ADMIN_PASSWORD");
+    if (!string.IsNullOrEmpty(adminEmail) && adminPassword is { Length: >= 12 } && args.Length == 0)
+    {
+        var existing = await db.Users.FirstOrDefaultAsync(x => x.Email == adminEmail);
+        if (existing is null)
+        {
+            db.Users.Add(new User { Email = adminEmail, Name = "Admin", Role = Roles.Admin, PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminPassword, 12) });
+            await db.SaveChangesAsync();
+            app.Logger.LogInformation("Created admin account {Email}", adminEmail);
+        }
+        else if (existing.Role != Roles.Admin && BCrypt.Net.BCrypt.Verify(adminPassword, existing.PasswordHash))
+        {
+            existing.Role = Roles.Admin;
+            await db.SaveChangesAsync();
+            app.Logger.LogInformation("Made {Email} an admin", adminEmail);
+        }
+    }
+
     // dotnet run -- make-admin you@example.com   (or: dotnet SoftServices.Api.dll make-admin you@example.com)
     if (args.Length >= 1 && args[0] == "make-admin")
     {
