@@ -39,6 +39,22 @@ services:
       - App__FrontendUrl=${SERVICE_URL_WEB:-http://localhost:3080}
       - App__SiteName=SoftServices
       - ConnectionStrings__Default=Data Source=/data/softservices.db
+      # Payment settings used until they are saved in Admin → Settings (which then take priority).
+      # Set the PayPal values in Coolify → Environment Variables; never commit keys here.
+      - FREE_MODE=${FREE_MODE:-0}
+      - PAYPAL_ENABLED=${PAYPAL_ENABLED:-0}
+      - PAYPAL_MODE=${PAYPAL_MODE:-sandbox}
+      - PAYPAL_CLIENT_ID=${PAYPAL_CLIENT_ID:-}
+      - PAYPAL_CLIENT_SECRET=${PAYPAL_CLIENT_SECRET:-}
+      - PAYPAL_PLAN_MONTHLY=${PAYPAL_PLAN_MONTHLY:-}
+      - PAYPAL_PLAN_YEARLY=${PAYPAL_PLAN_YEARLY:-}
+      - PAYPAL_WEBHOOK_ID=${PAYPAL_WEBHOOK_ID:-}
+      - MANUAL_ENABLED=${MANUAL_ENABLED:-1}
+      - MANUAL_LABEL=${MANUAL_LABEL:-Pay with Easypaisa}
+      - MANUAL_METHODS=${MANUAL_METHODS:-Easypaisa}
+      - MANUAL_PRICE_MONTHLY=${MANUAL_PRICE_MONTHLY:-}
+      - MANUAL_PRICE_YEARLY=${MANUAL_PRICE_YEARLY:-}
+      - "MANUAL_INSTRUCTIONS=${MANUAL_INSTRUCTIONS:-Easypaisa account number 0314 1979630. Send the exact amount shown above to this number, then enter the Transaction ID (TID) from your SMS or receipt below. Pro is activated as soon as we confirm the payment.}"
     volumes:
       - api-data:/data
 

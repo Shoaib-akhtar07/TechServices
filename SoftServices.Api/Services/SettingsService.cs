@@ -18,7 +18,7 @@ public class SettingsService(IServiceScopeFactory scopes, IOptions<AuthOptions> 
     public static readonly IReadOnlyDictionary<string, SettingDef> Definitions = new Dictionary<string, SettingDef>
     {
         // "1" = every Pro feature is free for everyone with an account.
-        ["free_mode"] = new("1"),
+        ["free_mode"] = new("1", "FREE_MODE"),
 
         // Site details shown by the website (empty = the website's built-in default).
         ["site_email"] = new(""),
@@ -42,21 +42,22 @@ public class SettingsService(IServiceScopeFactory scopes, IOptions<AuthOptions> 
         ["stripe_price_monthly"] = new(Env: "STRIPE_PRICE_MONTHLY"),
         ["stripe_price_yearly"] = new(Env: "STRIPE_PRICE_YEARLY"),
 
-        ["paypal_enabled"] = new("0"),
-        ["paypal_mode"] = new("sandbox"),
-        ["paypal_client_id"] = new(),
-        ["paypal_client_secret"] = new(Secret: true),
-        ["paypal_webhook_id"] = new(),
-        ["paypal_product_id"] = new(),
-        ["paypal_plan_monthly"] = new(),
-        ["paypal_plan_yearly"] = new(),
+        // Environment variables (e.g. set in Coolify) are used until a value is saved in the admin panel.
+        ["paypal_enabled"] = new("0", "PAYPAL_ENABLED"),
+        ["paypal_mode"] = new("sandbox", "PAYPAL_MODE"),
+        ["paypal_client_id"] = new(Env: "PAYPAL_CLIENT_ID"),
+        ["paypal_client_secret"] = new(Env: "PAYPAL_CLIENT_SECRET", Secret: true),
+        ["paypal_webhook_id"] = new(Env: "PAYPAL_WEBHOOK_ID"),
+        ["paypal_product_id"] = new(Env: "PAYPAL_PRODUCT_ID"),
+        ["paypal_plan_monthly"] = new(Env: "PAYPAL_PLAN_MONTHLY"),
+        ["paypal_plan_yearly"] = new(Env: "PAYPAL_PLAN_YEARLY"),
 
-        ["manual_enabled"] = new("0"),
-        ["manual_label"] = new("Bank transfer / JazzCash / Easypaisa"),
-        ["manual_methods"] = new("Bank transfer, JazzCash, Easypaisa"),
-        ["manual_price_monthly"] = new(""),
-        ["manual_price_yearly"] = new(""),
-        ["manual_instructions"] = new(""),
+        ["manual_enabled"] = new("0", "MANUAL_ENABLED"),
+        ["manual_label"] = new("Bank transfer / JazzCash / Easypaisa", "MANUAL_LABEL"),
+        ["manual_methods"] = new("Bank transfer, JazzCash, Easypaisa", "MANUAL_METHODS"),
+        ["manual_price_monthly"] = new("", "MANUAL_PRICE_MONTHLY"),
+        ["manual_price_yearly"] = new("", "MANUAL_PRICE_YEARLY"),
+        ["manual_instructions"] = new("", "MANUAL_INSTRUCTIONS"),
     };
 
     private static readonly TimeSpan Ttl = TimeSpan.FromSeconds(30);
