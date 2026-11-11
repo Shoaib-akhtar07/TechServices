@@ -9,6 +9,7 @@ import Providers from '@/components/Providers';
 import SiteChrome from '@/components/SiteChrome';
 import { SITE } from '@/lib/site';
 import { getSite, listTools } from '@/lib/server/content';
+import { organizationSchema } from '@/lib/business';
 
 const serif = Cormorant_Garamond({ subsets: ['latin'], weight: ['400', '500', '600', '700'], style: ['normal', 'italic'], variable: '--font-serif', display: 'swap' });
 const display = Jost({ subsets: ['latin'], weight: ['300', '400', '500', '600'], variable: '--font-display', display: 'swap' });
@@ -60,7 +61,7 @@ const themeScript = `try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&
 export default async function RootLayout({ children }) {
   const [site, tools] = await Promise.all([getSite(), listTools()]);
   // Only what menus and the tool grid need goes to the browser.
-  const toolList = tools.map(({ slug, name, short, icon, category, premium }) => ({ slug, name, short, icon, category, premium: !!premium }));
+  const toolList = tools.map(({ slug, name, short, icon, category, premium, keywords, variant }) => ({ slug, name, short, icon, category, premium: !!premium, keywords: keywords || [], variant: !!variant }));
   return (
     <html lang="en" className={`${serif.variable} ${display.variable}`} suppressHydrationWarning>
       <head>
@@ -69,7 +70,7 @@ export default async function RootLayout({ children }) {
           data={{
             '@context': 'https://schema.org',
             '@graph': [
-              { '@type': 'Organization', '@id': `${SITE.url}/#org`, name: SITE.name, url: SITE.url, logo: `${SITE.url}/icon.svg`, email: site.email },
+              ...organizationSchema(site),
               {
                 '@type': 'WebSite',
                 '@id': `${SITE.url}/#website`,

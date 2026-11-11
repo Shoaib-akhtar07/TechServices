@@ -42,7 +42,8 @@ public class CurrentUser(IHttpContextAccessor http, AppDbContext db, SettingsSer
     {
         if (_loaded) return _user;
         _loaded = true;
-        if (Id is { } id) _user = await db.Users.Include(x => x.Subscription).FirstOrDefaultAsync(x => x.Id == id);
+        // A suspended account counts as logged out everywhere, so its existing tokens stop working at once.
+        if (Id is { } id) _user = await db.Users.Include(x => x.Subscription).FirstOrDefaultAsync(x => x.Id == id && x.SuspendedAt == null);
         return _user;
     }
 

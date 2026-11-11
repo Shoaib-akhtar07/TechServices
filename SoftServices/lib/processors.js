@@ -5,6 +5,7 @@
 
 import { PDFDocument, StandardFonts, degrees, rgb } from 'pdf-lib';
 import { formatBytes } from './format';
+import { IMAGE_CONVERSIONS, ENCODER } from './image-formats';
 
 // ---------- helpers ----------
 let pdfjsPromise;
@@ -175,6 +176,258 @@ async function encodeImage(canvas, mime, quality, name, suffix) {
   // Some browsers (old Safari) silently fall back to PNG for WebP.
   const ext = EXT[blob.type] || 'png';
   return { name: `${baseName(name)}${suffix}.${ext}`, blob };
+}
+
+// ---------- extra image formats (the canvas only writes JPG, PNG and WebP) ----------
+
+/** 24-bit BMP. Transparent pixels must already be filled (drawToCanvas with a background). */
+function canvasToBmp(canvas) {
+  const { width: w, height: h } = canvas;
+  const px = canvas.getContext('2d').getImageData(0, 0, w, h).data;
+  const row = Math.ceil((w * 3) / 4) * 4;
+  const buf = new ArrayBuffer(54 + row * h);
+  const v = new DataView(buf);
+  v.setUint16(0, 0x4d42, true); // "BM"
+  v.setUint32(2, buf.byteLength, true);
+  v.setUint32(10, 54, true);
+  v.setUint32(14, 40, true);
+  v.setInt32(18, w, true);
+  v.setInt32(22, h, true); // positive height = rows stored bottom-up
+  v.setUint16(26, 1, true);
+  v.setUint16(28, 24, true);
+  v.setUint32(34, row * h, true);
+  v.setInt32(38, 2835, true); // 72 DPI
+  v.setInt32(42, 2835, true);
+  const out = new Uint8Array(buf);
+  for (let y = 0; y < h; y++) {
+    let o = 54 + (h - 1 - y) * row;
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4;
+      out[o++] = px[i + 2];
+      out[o++] = px[i + 1];
+      out[o++] = px[i];
+    }
+  }
+  return new Blob([buf], { type: 'image/bmp' });
+}
+
+/** ICO holding one PNG per size (square, image centred and kept in proportion). Sizes up to 256. */
+async function bitmapToIco(bmp, sizes) {
+  const pngs = [];
+  for (const size of sizes) {
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    const ctx = c.getContext('2d');
+    ctx.imageSmoothingQuality = 'high';
+    const s = Math.min(size / bmp.width, size / bmp.height);
+    const w = Math.max(1, Math.round(bmp.width * s)), h = Math.max(1, Math.round(bmp.height * s));
+    ctx.drawImage(bmp, Math.floor((size - w) / 2), Math.floor((size - h) / 2), w, h);
+    pngs.push({ size, bytes: new Uint8Array(await (await canvasToBlob(c, 'image/png')).arrayBuffer()) });
+  }
+  const head = new DataView(new ArrayBuffer(6 + 16 * pngs.length));
+  head.setUint16(2, 1, true); // type 1 = icon
+  head.setUint16(4, pngs.length, true);
+  let offset = head.byteLength;
+  pngs.forEach(({ size, bytes }, i) => {
+    const e = 6 + i * 16;
+    head.setUint8(e, size >= 256 ? 0 : size); // 0 means 256
+    head.setUint8(e + 1, size >= 256 ? 0 : size);
+    head.setUint16(e + 4, 1, true); // colour planes
+    head.setUint16(e + 6, 32, true); // bits per pixel
+    head.setUint32(e + 8, bytes.length, true);
+    head.setUint32(e + 12, offset, true);
+    offset += bytes.length;
+  });
+  return new Blob([head.buffer, ...pngs.map((x) => x.bytes)], { type: 'image/x-icon' });
+}
+
+const ICO_SIZES = { favicon: [16, 32, 48], app: [16, 32, 48, 64, 128, 256], '256': [256], '64': [64], '32': [32], '16': [16] };
+
+// ---------- GIF (256 colours, LZW) ----------
+
+/** Median cut: split the colour cloud along its widest channel until there are `n` boxes. */
+function medianCut(colors, n) {
+  let boxes = [colors];
+  while (boxes.length < n) {
+    let best = -1, bestRange = -1, bestCh = 0;
+    boxes.forEach((b, i) => {
+      if (b.length < 2) return;
+      for (let ch = 0; ch < 3; ch++) {
+        let lo = 255, hi = 0;
+        for (const c of b) { const v = (c >> (16 - ch * 8)) & 255; if (v < lo) lo = v; if (v > hi) hi = v; }
+        if (hi - lo > bestRange) { bestRange = hi - lo; best = i; bestCh = ch; }
+      }
+    });
+    if (best < 0 || bestRange === 0) break;
+    const shift = 16 - bestCh * 8;
+    const b = boxes[best].sort((x, y) => ((x >> shift) & 255) - ((y >> shift) & 255));
+    const mid = b.length >> 1;
+    boxes.splice(best, 1, b.slice(0, mid), b.slice(mid));
+  }
+  return boxes.filter((b) => b.length).map((b) => {
+    let r = 0, g = 0, bl = 0;
+    for (const c of b) { r += (c >> 16) & 255; g += (c >> 8) & 255; bl += c & 255; }
+    return [Math.round(r / b.length), Math.round(g / b.length), Math.round(bl / b.length)];
+  });
+}
+
+/** RGBA pixels → palette (max 256 entries, index 0 transparent when needed) + one index per pixel. */
+function quantize(px, w, h, dither) {
+  const n = w * h;
+  let transparent = false;
+  const unique = new Map();
+  for (let i = 0; i < n; i++) {
+    if (px[i * 4 + 3] < 128) { transparent = true; continue; }
+    if (unique.size <= 256) unique.set((px[i * 4] << 16) | (px[i * 4 + 1] << 8) | px[i * 4 + 2], 0);
+  }
+  const room = transparent ? 255 : 256;
+  const offset = transparent ? 1 : 0;
+  const indices = new Uint8Array(n);
+  let palette;
+
+  if (unique.size <= room) {
+    // Few colours (logos, icons, screenshots): exact palette, no dithering needed.
+    palette = [...unique.keys()].map((c) => [(c >> 16) & 255, (c >> 8) & 255, c & 255]);
+    const lookup = new Map([...unique.keys()].map((c, i) => [c, i + offset]));
+    for (let i = 0; i < n; i++) {
+      indices[i] = px[i * 4 + 3] < 128 ? 0 : lookup.get((px[i * 4] << 16) | (px[i * 4 + 1] << 8) | px[i * 4 + 2]);
+    }
+  } else {
+    // Photos: median cut on a sample, then nearest colour (optionally with Floyd–Steinberg dithering).
+    const step = Math.max(1, Math.floor(n / 60000));
+    const sample = [];
+    for (let i = 0; i < n; i += step) if (px[i * 4 + 3] >= 128) sample.push((px[i * 4] << 16) | (px[i * 4 + 1] << 8) | px[i * 4 + 2]);
+    palette = medianCut(sample, room);
+    const cache = new Int16Array(32768).fill(-1);
+    const nearest = (r, g, b) => {
+      const key = ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3);
+      if (cache[key] >= 0) return cache[key];
+      let best = 0, bd = Infinity;
+      for (let j = 0; j < palette.length; j++) {
+        const [pr, pg, pb] = palette[j];
+        const d = (pr - r) ** 2 * 2 + (pg - g) ** 2 * 4 + (pb - b) ** 2 * 3;
+        if (d < bd) { bd = d; best = j; }
+      }
+      cache[key] = best;
+      return best;
+    };
+    const err = dither ? new Float32Array(n * 3) : null;
+    const clamp = (v) => (v < 0 ? 0 : v > 255 ? 255 : v);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const i = y * w + x;
+        if (px[i * 4 + 3] < 128) { indices[i] = 0; continue; }
+        let r = px[i * 4], g = px[i * 4 + 1], b = px[i * 4 + 2];
+        if (err) { r = clamp(r + err[i * 3]); g = clamp(g + err[i * 3 + 1]); b = clamp(b + err[i * 3 + 2]); }
+        const j = nearest(r | 0, g | 0, b | 0);
+        indices[i] = j + offset;
+        if (err) {
+          const [pr, pg, pb] = palette[j];
+          const e = [r - pr, g - pg, b - pb];
+          const spread = (xx, yy, f) => {
+            if (xx < 0 || xx >= w || yy >= h) return;
+            const k = (yy * w + xx) * 3;
+            err[k] += e[0] * f; err[k + 1] += e[1] * f; err[k + 2] += e[2] * f;
+          };
+          spread(x + 1, y, 7 / 16); spread(x - 1, y + 1, 3 / 16); spread(x, y + 1, 5 / 16); spread(x + 1, y + 1, 1 / 16);
+        }
+      }
+    }
+  }
+  if (transparent) palette = [[0, 0, 0], ...palette];
+  return { palette, indices, transparent };
+}
+
+/** GIF LZW with 8-bit minimum code size, packed into 255-byte sub-blocks. */
+function lzw(indices) {
+  const out = [];
+  let cur = 0, bits = 0, size = 9, next = 258;
+  let dict = new Map();
+  const emit = (code) => {
+    cur |= code << bits;
+    bits += size;
+    while (bits >= 8) { out.push(cur & 255); cur >>>= 8; bits -= 8; }
+  };
+  emit(256);
+  let prefix = indices[0];
+  for (let i = 1; i < indices.length; i++) {
+    const k = indices[i];
+    const key = (prefix << 8) | k;
+    const code = dict.get(key);
+    if (code !== undefined) { prefix = code; continue; }
+    emit(prefix);
+    if (next === 4096) {
+      emit(256);
+      dict = new Map();
+      next = 258;
+      size = 9;
+    } else {
+      if (next >= 1 << size) size++;
+      dict.set(key, next++);
+    }
+    prefix = k;
+  }
+  emit(prefix);
+  emit(257);
+  if (bits > 0) out.push(cur & 255);
+  const blocks = [8];
+  for (let i = 0; i < out.length; i += 255) {
+    const chunk = out.slice(i, i + 255);
+    blocks.push(chunk.length, ...chunk);
+  }
+  blocks.push(0);
+  return blocks;
+}
+
+function canvasToGif(canvas, dither = true) {
+  const { width: w, height: h } = canvas;
+  const px = canvas.getContext('2d').getImageData(0, 0, w, h).data;
+  const { palette, indices, transparent } = quantize(px, w, h, dither);
+  let bitsPer = 1;
+  while (1 << bitsPer < palette.length) bitsPer++;
+  const tableSize = 1 << bitsPer;
+  const bytes = [0x47, 0x49, 0x46, 0x38, 0x39, 0x61, w & 255, w >> 8, h & 255, h >> 8, 0x80 | ((bitsPer - 1) << 4) | (bitsPer - 1), 0, 0];
+  for (let i = 0; i < tableSize; i++) bytes.push(...(palette[i] || [0, 0, 0]));
+  if (transparent) bytes.push(0x21, 0xf9, 4, 1, 0, 0, 0, 0);
+  bytes.push(0x2c, 0, 0, 0, 0, w & 255, w >> 8, h & 255, h >> 8, 0);
+  const data = lzw(indices);
+  const all = new Uint8Array(bytes.length + data.length + 1);
+  all.set(bytes);
+  all.set(data, bytes.length);
+  all[all.length - 1] = 0x3b;
+  return new Blob([all], { type: 'image/gif' });
+}
+
+/** One image in any supported output format: jpeg | png | webp | gif | bmp | ico. */
+async function convertOne(f, o) {
+  const bmp = await loadBitmap(f);
+  const format = o.format || 'jpeg';
+  if (format === 'ico') {
+    const blob = await bitmapToIco(bmp, ICO_SIZES[o.icoSizes] || ICO_SIZES.favicon);
+    return { name: `${baseName(f.name)}.ico`, blob, info: `${(ICO_SIZES[o.icoSizes] || ICO_SIZES.favicon).join(', ')} px` };
+  }
+  const flat = format === 'jpeg' || format === 'bmp';
+  // Optional output width (used by SVG to PNG, where the drawing has no fixed pixel size).
+  const bw = bmp.width || 300, bh = bmp.height || 150; // SVGs without a size report 0
+  const width = Number(o.width) > 0 ? Math.min(10000, Number(o.width)) : bw;
+  const height = (bh * width) / bw;
+  const canvas = drawToCanvas(bmp, width, height, flat ? o.background || '#ffffff' : null);
+  if (format === 'bmp') return { name: `${baseName(f.name)}.bmp`, blob: canvasToBmp(canvas) };
+  if (format === 'gif') return { name: `${baseName(f.name)}.gif`, blob: canvasToGif(canvas, o.dither !== false) };
+  const r = await encodeImage(canvas, `image/${format}`, (o.quality ?? 90) / 100, f.name, '');
+  if (format === 'webp' && r.blob.type !== 'image/webp') r.info = 'Your browser cannot write WebP, so this was saved as PNG.';
+  return r;
+}
+
+async function convertAll(files, o, progress) {
+  const results = [];
+  for (const f of files) {
+    progress(`Converting ${f.name}…`);
+    const r = await convertOne(f, o);
+    r.info = r.info || `${formatBytes(f.size)} → ${formatBytes(r.blob.size)}`;
+    results.push(r);
+  }
+  return results;
 }
 
 // WinAnsi-safe text for the standard PDF fonts.
@@ -663,17 +916,9 @@ export const PROCESSORS = {
     return results;
   },
 
-  async 'convert-image'(files, o, progress) {
-    const mime = `image/${o.format}`;
-    const results = [];
-    for (const f of files) {
-      progress(`Converting ${f.name}…`);
-      const bmp = await loadBitmap(f);
-      const canvas = drawToCanvas(bmp, bmp.width, bmp.height, mime === 'image/jpeg' ? '#fff' : null);
-      results.push(await encodeImage(canvas, mime, o.quality / 100, f.name, ''));
-    }
-    return results;
-  },
+  'convert-image': (files, o, progress) => convertAll(files, o, progress),
+
+  'image-to-ico': (files, o, progress) => convertAll(files, { ...o, format: 'ico' }, progress),
 
   // Same converter, separate landing pages for the searches people actually make.
   'png-to-pdf': (files, o, progress) => PROCESSORS['jpg-to-pdf'](files, o, progress),
@@ -999,4 +1244,9 @@ export async function pdfThumbnail(file) {
   } catch {
     return null;
   }
+}
+
+// Every "X to Y" image page (lib/image-formats.js) runs the shared converter with its fixed output format.
+for (const t of IMAGE_CONVERSIONS) {
+  PROCESSORS[t.slug] = (files, o, progress) => convertAll(files, { ...o, format: ENCODER[t.to] }, progress);
 }

@@ -7,14 +7,15 @@ import { Menu, X, Moon, Sun, ChevronDown, Crown, User, Home } from 'lucide-react
 import { CATEGORIES, toolsByCategory } from '@/lib/tools';
 import { SITE } from '@/lib/site';
 import Logo from './Logo';
+import SiteSearch from './SiteSearch';
 import { useFreeMode, useTools } from './Providers';
 
 // Account icon and the dark call-to-action at the end of the nav pill.
 function AccountButtons({ onClick }) {
   const { data: session, status } = useSession();
+  const freeMode = useFreeMode(); // before the early return: hooks must run in the same order every render
   if (status === 'loading') return <span className="h-11 w-32" />;
   const pro = session?.user?.pro;
-  const freeMode = useFreeMode();
   return (
     <>
       <Link
@@ -74,7 +75,8 @@ export default function Header() {
   const close = () => setOpen(false);
   const { data: session } = useSession();
   const freeMode = useFreeMode();
-  const tools = useTools();
+  // The many "X to Y" image pages stay out of the menus (found through search and the Convert Image hub).
+  const tools = useTools().filter((t) => !t.variant);
   const menu = CATEGORIES.map((c) => ({ ...c, tools: toolsByCategory(c.id, tools) })).filter((c) => c.tools.length);
   const quick = freeMode ? QUICK.filter((l) => l.href !== '/pricing/') : QUICK;
   const onHome = usePathname() === '/';
@@ -134,6 +136,7 @@ export default function Header() {
               </Link>
             ))}
           </nav>
+          <SiteSearch />
           <span className="hidden sm:contents">
             <ThemeToggle />
           </span>

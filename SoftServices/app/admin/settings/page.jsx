@@ -58,6 +58,69 @@ export default async function AdminSettings({ searchParams }) {
         </Section>
 
         <Section
+          title="Office & profiles (local SEO)"
+          help={
+            <>
+              <p>
+                Shown on the contact page and in the footer, and sent to Google as LocalBusiness data. Nothing is shown until a street and city are saved.
+                Write the name, address and phone exactly as on your Google Business Profile.
+              </p>
+            </>
+          }
+        >
+          <form action={saveSettingsAction} className="grid gap-4 sm:grid-cols-2">
+            <Hidden />
+            <Field label="Business name" hint="As on Google Business Profile. Empty = the site name.">
+              <input name="biz_name" defaultValue={s.biz_name} maxLength={100} className={input} />
+            </Field>
+            <Field label="Phone" hint="With country code, e.g. +92 300 1234567">
+              <input name="biz_phone" type="tel" defaultValue={s.biz_phone} maxLength={25} className={input} />
+            </Field>
+            <div className="sm:col-span-2">
+              <Field label="Street address">
+                <input name="biz_street" defaultValue={s.biz_street} maxLength={200} className={input} />
+              </Field>
+            </div>
+            <Field label="City">
+              <input name="biz_city" defaultValue={s.biz_city} maxLength={80} className={input} />
+            </Field>
+            <Field label="Province / state">
+              <input name="biz_region" defaultValue={s.biz_region} maxLength={80} className={input} />
+            </Field>
+            <Field label="Postal code">
+              <input name="biz_postal" defaultValue={s.biz_postal} maxLength={20} className={input} />
+            </Field>
+            <Field label="Country code" hint="2 letters, e.g. PK">
+              <input name="biz_country" defaultValue={s.biz_country} maxLength={2} className={input} />
+            </Field>
+            <Field label="Latitude" hint="From Google Maps: right-click the pin, copy the first number">
+              <input name="biz_lat" inputMode="decimal" defaultValue={s.biz_lat} className={input} />
+            </Field>
+            <Field label="Longitude">
+              <input name="biz_lng" inputMode="decimal" defaultValue={s.biz_lng} className={input} />
+            </Field>
+            <div className="sm:col-span-2">
+              <Field label="Opening hours" hint="schema.org format, separated by ; — e.g. Mo-Fr 09:00-18:00; Sa 10:00-14:00">
+                <input name="biz_hours" defaultValue={s.biz_hours} maxLength={200} className={input} />
+              </Field>
+            </div>
+            <div className="sm:col-span-2">
+              <Field label="Google Business Profile / Maps link" hint="Share link of your profile (https://maps.app.goo.gl/… or https://g.page/…)">
+                <input name="biz_maps_url" type="url" defaultValue={s.biz_maps_url} className={input} />
+              </Field>
+            </div>
+            <div className="sm:col-span-2">
+              <Field label="Official profiles" hint="One link per line: Facebook, LinkedIn, YouTube, Instagram, Crunchbase, Wikipedia… Tells search engines and AI tools these accounts are yours.">
+                <textarea name="social_profiles" rows={4} defaultValue={s.social_profiles} className={input} />
+              </Field>
+            </div>
+            <div className="sm:col-span-2">
+              <ConfirmButton className={primaryBtn}>Save office &amp; profiles</ConfirmButton>
+            </div>
+          </form>
+        </Section>
+
+        <Section
           title="Search engines"
           status={<Badge tone={s.verify_google && s.verify_bing ? 'green' : s.verify_google || s.verify_bing ? 'amber' : 'slate'}>{[s.verify_google && 'Google', s.verify_bing && 'Bing'].filter(Boolean).join(' + ') || 'Not verified'}</Badge>}
           help={

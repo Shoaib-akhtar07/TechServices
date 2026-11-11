@@ -7,6 +7,7 @@ import { api, clearSiteCache, getSiteConfig } from './api';
 export const SETTINGS = Object.fromEntries(
   [
     'free_mode', 'site_email', 'site_twitter', 'site_developer', 'site_developer_url', 'site_announcement', 'verify_google', 'verify_bing', 'tools',
+    'biz_name', 'biz_phone', 'biz_street', 'biz_city', 'biz_region', 'biz_postal', 'biz_country', 'biz_lat', 'biz_lng', 'biz_hours', 'biz_maps_url', 'social_profiles',
     'currency', 'price_monthly', 'price_yearly', 'pro_daily_limit',
     'stripe_enabled', 'stripe_secret_key', 'stripe_webhook_secret', 'stripe_price_monthly', 'stripe_price_yearly',
     'paypal_enabled', 'paypal_mode', 'paypal_client_id', 'paypal_client_secret', 'paypal_webhook_id', 'paypal_product_id', 'paypal_plan_monthly', 'paypal_plan_yearly',

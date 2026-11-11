@@ -6,6 +6,7 @@ import { CATEGORIES } from '@/lib/tools';
 import ToolCard from './ToolCard';
 import ToolIcon from './ToolIcon';
 import { useFreeMode, useTools } from './Providers';
+import { searchTools } from '@/lib/search';
 
 // Free tools get their own cards; every Pro tool and editor is grouped into one card at the end.
 const PRO_TAB = { id: 'pro-all', name: 'Pro' };
@@ -49,7 +50,9 @@ export default function ToolGrid() {
   const [q, setQ] = useState('');
   const freeMode = useFreeMode();
   const TOOLS = useTools();
-  const matches = (t) => (t.name + ' ' + t.short).toLowerCase().includes(q.toLowerCase());
+  const hits = q.trim() ? new Set(searchTools(TOOLS, q).map((t) => t.slug)) : null;
+  // Without a search, the many "X to Y" image pages are left out (the Convert Image page links them all).
+  const matches = (t) => (hits ? hits.has(t.slug) : !t.variant);
   const free = TOOLS.filter((t) => !t.premium && (active === 'all' || t.category === active) && matches(t));
   const pro = TOOLS.filter((t) => t.premium && (active === 'all' || active === PRO_TAB.id) && matches(t));
   const tabs = [{ id: 'all', name: 'All tools' }, ...CATEGORIES.filter((c) => TOOLS.some((t) => t.category === c.id && !t.premium)), freeMode ? { ...PRO_TAB, name: 'Office & more' } : PRO_TAB];

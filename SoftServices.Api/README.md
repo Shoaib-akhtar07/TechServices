@@ -82,7 +82,10 @@ Article body: send `body` as simple text (`## Heading`, `- bullet`, `1. step`, b
 paragraphs) **or** `blocks` as JSON (`[{ "h2": "" }, { "p": "" }, { "ul": [] }, { "ol": [] }]`).
 `published: false` = draft; a future `publishedAt` = scheduled. Authors only see and edit their own posts.
 
-**Admin** — `GET /api/admin/stats` · `GET /api/admin/users?q` · `POST /api/admin/users/{id}/grant-pro` `{plan, days}` ·
+**Admin** — `GET /api/admin/stats` · `GET /api/admin/users?q&filter` (filter: all, pro, free, admin, author, suspended) ·
+`POST /api/admin/users` `{email, name, password, role}` · `PUT /api/admin/users/{id}` `{email, name}` ·
+`POST /api/admin/users/{id}/password` `{password}` · `POST /api/admin/users/{id}/suspend` `{suspended}` ·
+`POST /api/admin/users/{id}/grant-pro` `{plan, days}` ·
 `POST /api/admin/users/{id}/revoke-pro` · `PUT /api/admin/users/{id}/role` `{role}` · `DELETE /api/admin/users/{id}` ·
 `GET /api/admin/payments/manual?status=pending` · `POST /api/admin/payments/manual/{id}/approve` · `POST …/{id}/reject` `{adminNote}` ·
 `GET /api/admin/payments/history` · `GET|PUT /api/admin/settings` · `DELETE /api/admin/settings/{key}` ·

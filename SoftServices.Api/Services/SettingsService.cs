@@ -28,6 +28,20 @@ public class SettingsService(IServiceScopeFactory scopes, IOptions<AuthOptions> 
         ["site_announcement"] = new(""),
         ["verify_google"] = new(""),
         ["verify_bing"] = new(""),
+        // Office details for local search (LocalBusiness schema, contact page, footer). Empty = not shown.
+        ["biz_name"] = new(""),
+        ["biz_phone"] = new(""),
+        ["biz_street"] = new(""),
+        ["biz_city"] = new(""),
+        ["biz_region"] = new(""),
+        ["biz_postal"] = new(""),
+        ["biz_country"] = new(""),
+        ["biz_lat"] = new(""),
+        ["biz_lng"] = new(""),
+        ["biz_hours"] = new(""),
+        ["biz_maps_url"] = new(""),
+        // Official profiles (Facebook, LinkedIn, YouTube, …), one URL per line: schema.org sameAs.
+        ["social_profiles"] = new(""),
         // Per-tool text changes / hidden tools, as JSON: { [slug]: { hidden, name, short, title, description } }.
         ["tools"] = new("{}"),
 

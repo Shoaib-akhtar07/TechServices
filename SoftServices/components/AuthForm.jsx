@@ -32,6 +32,7 @@ export default function AuthForm({ mode }) {
         if (!res.ok) throw new Error(j.error);
       }
       const r = await signIn('credentials', { email: form.email, password: form.password, redirect: false });
+      if (r?.error === 'suspended') throw new Error('This account has been suspended. Please contact support.');
       if (!r || r.error) throw new Error('Incorrect email or password.');
       router.push(next);
       router.refresh();

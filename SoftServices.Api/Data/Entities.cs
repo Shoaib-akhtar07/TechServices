@@ -36,6 +36,8 @@ public class User
     public string? StripeCustomerId { get; set; }
     public string Role { get; set; } = Roles.User;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    /// <summary>Set by an admin to block the account: it cannot log in and its tokens stop working.</summary>
+    public DateTime? SuspendedAt { get; set; }
 
     public Subscription? Subscription { get; set; }
     public List<Usage> Usage { get; set; } = [];

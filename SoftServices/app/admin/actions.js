@@ -69,6 +69,20 @@ export async function saveSettingsAction(formData) {
     if (values[k] && !/^[\w-]{6,100}$/.test(values[k])) back(formData, 'A verification code should only contain letters, numbers, - and _.', true);
   }
 
+  // Office & profiles (local SEO). Numbers and links are checked so the structured data stays valid.
+  if (values.biz_phone && !/^\+?[\d\s()-]{6,25}$/.test(values.biz_phone)) back(formData, 'The phone number may only contain digits, spaces, ( ) - and a leading +.', true);
+  for (const [k, min, max] of [['biz_lat', -90, 90], ['biz_lng', -180, 180]]) {
+    if (values[k] && !(Number(values[k]) >= min && Number(values[k]) <= max)) back(formData, 'Latitude must be -90 to 90 and longitude -180 to 180 (decimal degrees, e.g. 31.52037).', true);
+  }
+  if (values.biz_maps_url && !/^https:\/\/\S+$/.test(values.biz_maps_url)) back(formData, 'The Google Business Profile / Maps link must start with https://', true);
+  if ('biz_country' in values) values.biz_country = values.biz_country.toUpperCase();
+  if (values.biz_country && !/^[A-Z]{2}$/.test(values.biz_country)) back(formData, 'Country must be a 2-letter code such as PK, US or GB.', true);
+  if ('social_profiles' in values) {
+    const lines = values.social_profiles.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    if (lines.some((l) => !/^https:\/\/\S+$/.test(l))) back(formData, 'Each profile must be a full link starting with https:// on its own line.', true);
+    values.social_profiles = lines.join('\n');
+  }
+
   if ('price_monthly' in values || 'price_yearly' in values) {
     for (const k of ['price_monthly', 'price_yearly']) {
       if (!(Number(values[k]) > 0)) back(formData, 'Prices must be numbers greater than 0.', true);
@@ -137,6 +151,34 @@ export async function setRoleAction(formData) {
   await requireAdmin();
   const role = ['admin', 'author'].includes(formData.get('role')) ? formData.get('role') : 'user';
   const r = await call(formData, () => api(userPath(formData, '/role'), { method: 'PUT', body: { role } }));
+  back(formData, r.message);
+}
+
+export async function createUserAction(formData) {
+  await requireAdmin();
+  const role = ['admin', 'author'].includes(formData.get('role')) ? formData.get('role') : 'user';
+  const body = { email: text(formData, 'email', 254), name: text(formData, 'name', 80), password: String(formData.get('password') || ''), role };
+  const r = await call(formData, () => api('/admin/users', { method: 'POST', body }));
+  go(`/admin/users/?q=${encodeURIComponent(body.email)}`, r.message);
+}
+
+export async function updateUserAction(formData) {
+  await requireAdmin();
+  const body = { email: text(formData, 'email', 254), name: text(formData, 'name', 80) };
+  const r = await call(formData, () => api(userPath(formData), { method: 'PUT', body }));
+  back(formData, r.message);
+}
+
+export async function setPasswordAction(formData) {
+  await requireAdmin();
+  const r = await call(formData, () => api(userPath(formData, '/password'), { method: 'POST', body: { password: String(formData.get('password') || '') } }));
+  back(formData, r.message);
+}
+
+export async function suspendUserAction(formData) {
+  await requireAdmin();
+  const suspended = formData.get('suspended') === '1';
+  const r = await call(formData, () => api(userPath(formData, '/suspend'), { method: 'POST', body: { suspended } }));
   back(formData, r.message);
 }
 

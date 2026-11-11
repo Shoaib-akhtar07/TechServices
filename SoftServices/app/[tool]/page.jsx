@@ -9,14 +9,15 @@ import ProBadge from '@/components/ProBadge';
 import EditorLoader from '@/components/editors/EditorLoader';
 import { TOOLS, COMMON_FAQS, PRO_FAQS, getCategory } from '@/lib/tools';
 import { PLANS } from '@/lib/plans';
-import { SITE } from '@/lib/site';
-import { findTool, getSite, listRelatedTools } from '@/lib/server/content';
+import { SITE, CONTENT_UPDATED } from '@/lib/site';
+import { findTool, getSite, listRelatedTools, listTools } from '@/lib/server/content';
+import { FormatComparison, RelatedConversions, ConversionMatrix } from '@/components/ConversionInfo';
 
 export const dynamicParams = false;
 
 // "Compress PDF" -> "compress PDF" (keeps acronyms capitalised for headings).
-const PROPER = { pdf: 'PDF', jpg: 'JPG', png: 'PNG', ocr: 'OCR', word: 'Word', excel: 'Excel', powerpoint: 'PowerPoint' };
-const lowerName = (s) => s.toLowerCase().replace(/\b(pdf|jpg|png|ocr|word|excel|powerpoint)\b/g, (m) => PROPER[m]);
+const PROPER = { pdf: 'PDF', jpg: 'JPG', png: 'PNG', ocr: 'OCR', word: 'Word', excel: 'Excel', powerpoint: 'PowerPoint', webp: 'WebP', gif: 'GIF', bmp: 'BMP', avif: 'AVIF', svg: 'SVG', ico: 'ICO' };
+const lowerName = (s) => s.toLowerCase().replace(/\b(pdf|jpg|png|ocr|word|excel|powerpoint|webp|gif|bmp|avif|svg|ico)\b/g, (m) => PROPER[m]);
 // "JPG to PDF" -> "convert JPG to PDF", "Merge PDF" -> "merge PDF" (reads as a verb phrase in headings).
 const action = (s) => (/ to /i.test(s) ? `convert ${lowerName(s)}` : lowerName(s));
 
@@ -42,7 +43,8 @@ export default async function ToolPage({ params }) {
   // Hidden in Admin → Tools: 404.
   const tool = await findTool(params.tool);
   if (!tool) notFound();
-  const [{ freeMode }, related] = await Promise.all([getSite(), listRelatedTools(tool.slug)]);
+  const [{ freeMode }, related, visibleTools] = await Promise.all([getSite(), listRelatedTools(tool.slug), listTools()]);
+  const visible = new Set(visibleTools.map((t) => t.slug));
   const cat = getCategory(tool.category);
   const premium = !!tool.premium;
   // In free mode the subscription / cancel questions do not apply.
@@ -86,6 +88,9 @@ export default async function ToolPage({ params }) {
                 ? { '@type': 'Offer', price: String(PLANS.monthly.price), priceCurrency: 'USD', category: 'subscription', url: `${SITE.url}/pricing/` }
                 : { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
               publisher: { '@id': `${SITE.url}/#org` },
+              isAccessibleForFree: !premium || freeMode,
+              dateModified: CONTENT_UPDATED,
+              inLanguage: 'en',
             },
             {
               '@type': 'HowTo',
@@ -125,6 +130,15 @@ export default async function ToolPage({ params }) {
       </section>
 
       <article className="mx-auto mt-20 max-w-4xl px-4">
+        {tool.answer && (
+          <section className="mb-16 rounded-2xl border border-brand-200 bg-brand-50/60 p-6 dark:border-brand-500/30 dark:bg-brand-500/10">
+            <h2 className="text-2xl font-semibold">How do I {action(tool.name)}?</h2>
+            <p className="mt-3 text-slate-700 dark:text-slate-300">{tool.answer}</p>
+            <p className="mt-3 text-xs text-slate-500">
+              Last updated <time dateTime={CONTENT_UPDATED}>{new Date(CONTENT_UPDATED).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</time>
+            </p>
+          </section>
+        )}
         <h2 className="text-3xl font-semibold">
           How to {action(tool.name)} online{premium && !freeMode ? '' : ' for free'}
         </h2>
@@ -178,6 +192,9 @@ export default async function ToolPage({ params }) {
           </div>
         </div>
 
+        {tool.from && tool.to && <FormatComparison from={tool.from} to={tool.to} reason={tool.reason} />}
+        {tool.slug === 'convert-image' && <ConversionMatrix visible={visible} />}
+
         <h2 className="mt-16 text-3xl font-semibold">Frequently asked questions</h2>
         <div className="mt-6 space-y-3">
           {faqs.map((f) => (
@@ -187,6 +204,8 @@ export default async function ToolPage({ params }) {
             </details>
           ))}
         </div>
+
+        {tool.from && tool.to && <RelatedConversions from={tool.from} to={tool.to} visible={visible} />}
       </article>
 
       <section className="mx-auto mt-20 max-w-6xl px-4">

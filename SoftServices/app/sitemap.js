@@ -1,5 +1,6 @@
 import { SITE } from '@/lib/site';
 import { getSite, listPosts, listTools } from '@/lib/server/content';
+import { COMPARISONS } from '@/lib/comparisons';
 
 // Rebuilt hourly (and whenever an admin saves) so hidden tools, new posts and free mode reach the sitemap.
 export const revalidate = 3600;
@@ -14,6 +15,8 @@ export default async function sitemap() {
     ...(freeMode ? [] : [page('/pricing/', 0.8)]),
     page('/blog/', 0.7, 'weekly'),
     ...posts.map((p) => page(`/blog/${p.slug}/`, 0.6, 'yearly', new Date(p.updatedAt || p.date))),
+    page('/compare/', 0.5),
+    ...COMPARISONS.map((c) => page(`/compare/${c.slug}/`, 0.5, 'monthly', new Date(c.checked))),
     page('/about/', 0.4, 'yearly'),
     page('/contact/', 0.3, 'yearly'),
     page('/privacy/', 0.2, 'yearly'),

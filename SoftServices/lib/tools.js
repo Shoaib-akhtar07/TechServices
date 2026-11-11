@@ -11,7 +11,11 @@ export const CATEGORIES = [
   { id: 'image', name: 'Image Tools', color: 'bg-sky-500', text: 'text-sky-500', soft: 'bg-sky-50 dark:bg-sky-500/10' },
 ];
 
+import { IMAGE_CONVERSIONS } from './image-formats';
+
 const PDF = 'application/pdf,.pdf';
+// Everything the browser can open, for the converters (AVIF, SVG and ICO too).
+const IMG_ANY = 'image/jpeg,image/png,image/webp,image/gif,image/bmp,image/avif,image/svg+xml,image/x-icon,image/vnd.microsoft.icon,.jpg,.jpeg,.jfif,.png,.webp,.gif,.bmp,.avif,.svg,.ico';
 const IMG = 'image/jpeg,image/png,image/webp,image/gif,image/bmp,.jpg,.jpeg,.png,.webp,.gif,.bmp';
 
 const RANGE_HELP = 'Example: 1-3, 5, 8-10. Use "8-" for page 8 to the end.';
@@ -1016,23 +1020,76 @@ export const TOOLS = [
     name: 'Convert Image',
     category: 'image',
     icon: 'RefreshCw',
-    short: 'Convert between JPG, PNG and WebP formats.',
-    title: 'Image Converter Online Free – JPG, PNG & WebP',
+    short: 'Convert between JPG, PNG, WebP, GIF, BMP and ICO formats.',
+    title: 'Image Converter Online Free – JPG, PNG, WebP, GIF, BMP & ICO',
     description:
-      'Convert images between JPG, PNG and WebP online. Batch convert in seconds with no upload and no quality surprises. Free image format converter.',
-    keywords: ['image converter', 'png to jpg', 'jpg to png', 'webp to jpg', 'convert image format'],
-    accept: IMG,
+      'Convert images between JPG, PNG, WebP, GIF, BMP and ICO online. Opens AVIF and SVG too. Batch convert in seconds, right in your browser.',
+    keywords: ['image converter', 'png to jpg', 'jpg to png', 'webp to jpg', 'convert image format', 'avif to jpg', 'jpg to bmp', 'gif to png', 'image to ico'],
+    accept: IMG_ANY,
     multiple: true,
     cta: 'Convert images',
     options: [
       {
         id: 'format', label: 'Convert to', type: 'select', default: 'jpeg',
-        choices: [{ value: 'jpeg', label: 'JPG' }, { value: 'png', label: 'PNG' }, { value: 'webp', label: 'WebP' }],
+        choices: [
+          { value: 'jpeg', label: 'JPG' },
+          { value: 'png', label: 'PNG' },
+          { value: 'webp', label: 'WebP' },
+          { value: 'gif', label: 'GIF' },
+          { value: 'bmp', label: 'BMP' },
+          { value: 'ico', label: 'ICO (icon / favicon)' },
+        ],
       },
       { id: 'quality', label: 'Quality (%)', type: 'range', default: 90, min: 10, max: 100, step: 5, showIf: { format: ['jpeg', 'webp'] } },
+      { id: 'background', label: 'Background for transparent areas', type: 'color', default: '#ffffff', showIf: { format: ['jpeg', 'bmp'] } },
+      { id: 'dither', label: 'Dither (smoother gradients and photos)', type: 'checkbox', default: true, showIf: { format: 'gif' } },
+      {
+        id: 'icoSizes', label: 'Icon sizes', type: 'select', default: 'favicon', showIf: { format: 'ico' },
+        choices: [
+          { value: 'favicon', label: 'Favicon (16, 32, 48 px)' },
+          { value: 'app', label: 'All sizes (16 to 256 px)' },
+          { value: '256', label: '256 px only' },
+          { value: '32', label: '32 px only' },
+        ],
+      },
     ],
     steps: ['Choose your images.', 'Pick the target format.', 'Click “Convert images” and download.'],
-    faqs: [],
+    faqs: [
+      { q: 'Which formats can I convert from?', a: 'JPG, PNG, WebP, GIF, BMP, AVIF, SVG and ICO. HEIC photos from iPhones open only in Safari; in other browsers, convert them on the phone first or set the camera to “Most compatible”.' },
+      { q: 'What happens to transparent areas?', a: 'PNG, WebP and ICO keep transparency. JPG and BMP cannot store it, so transparent areas are filled with the background colour you choose (white by default).' },
+      { q: 'Are animated GIFs kept animated?', a: 'No. The first frame is converted into a still image.' },
+      { q: 'Can I convert to AVIF or SVG?', a: 'Not yet. Browsers can open AVIF and SVG but cannot save them, so they are available as input formats only. SVG is a vector format, so turning a photo into SVG needs tracing software.' },
+    ],
+  },
+  ...IMAGE_CONVERSIONS,
+  {
+    slug: 'image-to-ico',
+    name: 'Image to ICO',
+    category: 'image',
+    icon: 'ImageDown',
+    to: 'ico',
+    short: 'Create ICO icons and website favicons from any image.',
+    title: 'Image to ICO Converter – Favicon Generator',
+    description: 'Convert PNG, JPG, WebP or SVG to ICO online. Make a favicon.ico with 16, 32 and 48 px sizes, or app icons up to 256 px — free and private.',
+    answer: 'To make an ICO file, choose any image above, pick the icon sizes (16, 32 and 48 px for a website favicon), click “Convert to ICO” and download favicon-ready .ico files. Everything runs in your browser, so nothing is uploaded.',
+    keywords: ['image to ico', 'favicon generator', 'png to ico', 'jpg to ico', 'ico converter', 'favicon ico', 'make favicon'],
+    accept: IMG_ANY,
+    multiple: true,
+    cta: 'Convert to ICO',
+    options: [{
+      id: 'icoSizes', label: 'Icon sizes', type: 'select', default: 'favicon',
+      choices: [
+        { value: 'favicon', label: 'Favicon (16, 32, 48 px)' },
+        { value: 'app', label: 'All sizes (16 to 256 px)' },
+        { value: '256', label: '256 px only' },
+        { value: '32', label: '32 px only' },
+      ],
+    }],
+    steps: ['Choose your image (a square logo works best).', 'Pick the icon sizes.', 'Click “Convert to ICO” and download your .ico file.'],
+    faqs: [
+      { q: 'Which sizes does a favicon need?', a: 'A favicon.ico with 16, 32 and 48 px covers browser tabs, bookmarks and Windows shortcuts. Add a 180 px PNG as apple-touch-icon for iPhone home screens.' },
+      { q: 'Is transparency kept?', a: 'Yes. ICO files store transparency, so a logo on a transparent background stays transparent.' },
+    ],
   },
   {
     slug: 'crop-image',

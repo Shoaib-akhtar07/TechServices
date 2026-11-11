@@ -1,13 +1,13 @@
 import Link from 'next/link';
-import { Search, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, ChevronDown, ChevronLeft, ChevronRight, UserPlus } from 'lucide-react';
 import { api } from '@/lib/server/api';
 import { requireAdmin } from '@/lib/server/admin';
-import { grantProAction, revokeProAction, setRoleAction, deleteUserAction } from '../actions';
+import { grantProAction, revokeProAction, setRoleAction, deleteUserAction, createUserAction, updateUserAction, setPasswordAction, suspendUserAction } from '../actions';
 import ConfirmButton from '@/components/admin/ConfirmButton';
-import { Avatar, Badge, EmptyState, Flash, PageTitle, Tabs, dangerBtn, fmtDate, input, panel, primaryBtn, smallBtn } from '@/components/admin/ui';
+import { Avatar, Badge, EmptyState, Field, Flash, PageTitle, Tabs, dangerBtn, fmtDate, input, panel, primaryBtn, smallBtn } from '@/components/admin/ui';
 
 const PER_PAGE = 25;
-const FILTERS = { all: 'All users', pro: 'Pro', free: 'Free', admin: 'Admins', author: 'Authors' };
+const FILTERS = { all: 'All users', pro: 'Pro', free: 'Free', admin: 'Admins', author: 'Authors', suspended: 'Suspended' };
 const PROVIDER = { stripe: 'Card', paypal: 'PayPal', manual: 'Manual', admin: 'Admin grant' };
 
 export default async function AdminUsers({ searchParams }) {
@@ -22,10 +22,39 @@ export default async function AdminUsers({ searchParams }) {
 
   return (
     <>
-      <PageTitle eyebrow="Customers" sub="Everyone with an account. Open a row to give or remove Pro, change roles or delete the account.">
+      <PageTitle eyebrow="Customers" sub="Everyone with an account. Open a row to edit details, reset the password, give or remove Pro, change the role, suspend or delete the account.">
         Users
       </PageTitle>
       <Flash searchParams={searchParams} />
+
+      <details className={`${panel} group mb-6`}>
+        <summary className="flex cursor-pointer list-none items-center gap-2 px-5 py-3.5 text-sm font-semibold text-slate-900 dark:text-white">
+          <UserPlus className="h-4 w-4 text-brand-600 dark:text-brand-300" /> Add a user
+          <ChevronDown className="ml-auto h-4 w-4 text-slate-400 transition group-open:rotate-180" />
+        </summary>
+        <form action={createUserAction} className="grid gap-4 border-t border-slate-100 px-5 py-5 sm:grid-cols-2 lg:grid-cols-4 dark:border-white/10">
+          <input type="hidden" name="back" value={backUrl} />
+          <Field label="Email">
+            <input name="email" type="email" required maxLength={254} className={input} placeholder="name@example.com" />
+          </Field>
+          <Field label="Name (optional)">
+            <input name="name" maxLength={80} className={input} />
+          </Field>
+          <Field label="Password" hint="8 to 72 characters. Share it with the user privately.">
+            <input name="password" type="text" required minLength={8} maxLength={72} autoComplete="new-password" className={input} />
+          </Field>
+          <Field label="Role">
+            <select name="role" defaultValue="user" className={input}>
+              <option value="user">User</option>
+              <option value="author">Author (writes blog posts)</option>
+              <option value="admin">Admin (full access)</option>
+            </select>
+          </Field>
+          <div className="sm:col-span-2 lg:col-span-4">
+            <ConfirmButton className={primaryBtn}>Create account</ConfirmButton>
+          </div>
+        </form>
+      </details>
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <Tabs items={Object.entries(FILTERS).map(([k, label]) => ({ href: `/admin/users/?${new URLSearchParams({ ...(q && { q }), filter: k })}`, label, active: filter === k }))} />
@@ -52,6 +81,7 @@ export default async function AdminUsers({ searchParams }) {
               const admin = u.admin;
               const envAdmin = admin && u.role !== 'admin';
               const isMe = u.id === me.id;
+              const suspended = !!u.suspendedAt;
               return (
                 <li key={u.id}>
                   <details className="group">
@@ -65,8 +95,9 @@ export default async function AdminUsers({ searchParams }) {
                           <span className="block truncate text-xs text-slate-500">{u.email}</span>
                         </span>
                       </span>
-                      <span className="hidden md:block">
+                      <span className="hidden flex-wrap gap-1 md:flex">
                         {admin ? <Badge tone="violet">Admin</Badge> : u.role === 'author' ? <Badge tone="blue">Author</Badge> : <span className="text-sm text-slate-500">User</span>}
+                        {suspended && <Badge tone="red" dot>Suspended</Badge>}
                       </span>
                       <span className="hidden min-w-0 md:block">
                         {pro ? (
@@ -83,6 +114,27 @@ export default async function AdminUsers({ searchParams }) {
                     </summary>
 
                     <div className="grid gap-6 border-t border-slate-100 bg-slate-50/60 px-5 py-5 md:grid-cols-2 dark:border-white/10 dark:bg-white/[0.03]">
+                      <form action={updateUserAction} className="space-y-3">
+                        <p className="text-sm font-semibold text-slate-900 dark:text-white">Details</p>
+                        <input type="hidden" name="userId" value={u.id} />
+                        <input type="hidden" name="back" value={backUrl} />
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          <input name="name" defaultValue={u.name || ''} maxLength={80} placeholder="Name" aria-label="Name" className={input} />
+                          <input name="email" type="email" required defaultValue={u.email} maxLength={254} aria-label="Email" className={input} />
+                        </div>
+                        <ConfirmButton className={smallBtn}>Save details</ConfirmButton>
+                      </form>
+
+                      <form action={setPasswordAction} className="space-y-3">
+                        <p className="text-sm font-semibold text-slate-900 dark:text-white">Reset password</p>
+                        <input type="hidden" name="userId" value={u.id} />
+                        <input type="hidden" name="back" value={backUrl} />
+                        <input name="password" type="text" required minLength={8} maxLength={72} autoComplete="new-password" placeholder="New password (8+ characters)" aria-label="New password" className={input} />
+                        <ConfirmButton confirm={`Set a new password for ${u.email}? Their old password stops working.`} className={smallBtn}>
+                          Set password
+                        </ConfirmButton>
+                      </form>
+
                       <form action={grantProAction} className="space-y-3">
                         <p className="text-sm font-semibold text-slate-900 dark:text-white">{pro ? 'Add Pro time' : 'Give Pro'}</p>
                         <input type="hidden" name="userId" value={u.id} />
@@ -138,6 +190,19 @@ export default async function AdminUsers({ searchParams }) {
                             </form>
                           )}
                           {!isMe && (
+                            <form action={suspendUserAction}>
+                              <input type="hidden" name="userId" value={u.id} />
+                              <input type="hidden" name="suspended" value={suspended ? '0' : '1'} />
+                              <input type="hidden" name="back" value={backUrl} />
+                              <ConfirmButton
+                                confirm={suspended ? `Let ${u.email} log in again?` : `Suspend ${u.email}? They are logged out and cannot log in until you unsuspend them.`}
+                                className={suspended ? smallBtn : dangerBtn}
+                              >
+                                {suspended ? 'Unsuspend' : 'Suspend'}
+                              </ConfirmButton>
+                            </form>
+                          )}
+                          {!isMe && (
                             <form action={deleteUserAction}>
                               <input type="hidden" name="userId" value={u.id} />
                               <input type="hidden" name="back" value={backUrl} />
@@ -149,6 +214,8 @@ export default async function AdminUsers({ searchParams }) {
                         </div>
                         <dl className="space-y-1 text-xs text-slate-500">
                           {envAdmin && <dd>Admin through DevAdminEmails (development only).</dd>}
+                          {suspended && <dd className="text-rose-600 dark:text-rose-300">Suspended on {fmtDate(u.suspendedAt)}.</dd>}
+                          <dd>Pro jobs: {u.usage?.today ?? 0} today · {u.usage?.total ?? 0} in total</dd>
                           {sub?.stripeSubscriptionId && <dd className="break-all">Stripe: <span className="font-mono">{sub.stripeSubscriptionId}</span></dd>}
                           {sub?.paypalSubscriptionId && <dd className="break-all">PayPal: <span className="font-mono">{sub.paypalSubscriptionId}</span></dd>}
                           <dd className="break-all">User ID: <span className="font-mono">{u.id}</span></dd>

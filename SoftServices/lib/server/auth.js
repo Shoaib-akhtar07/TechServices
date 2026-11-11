@@ -28,7 +28,9 @@ export const authOptions = {
         try {
           const { token, user } = await api('/auth/login', { method: 'POST', body: { email, password }, token: null });
           return { id: user.id, email: user.email, name: user.name, apiToken: token };
-        } catch {
+        } catch (e) {
+          // NextAuth passes a thrown error's message to the login form as `error`.
+          if (e?.status === 403) throw new Error('suspended');
           return null;
         }
       },

@@ -9,6 +9,10 @@ services:
   web:
     build:
       context: ./SoftServices
+      args:
+        # Public domain for canonical URLs, sitemap, robots.txt and llms.txt (baked in at build time).
+        # Set SITE_URL in Coolify (e.g. https://www.yourdomain.com); falls back to Coolify's URL.
+        - NEXT_PUBLIC_SITE_URL=${SITE_URL:-${SERVICE_URL_WEB:-}}
     restart: unless-stopped
     environment:
       # Coolify: route the public domain to port 3000 of this container.

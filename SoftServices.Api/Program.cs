@@ -98,6 +98,7 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.EnsureCreatedAsync();
+    await SchemaUpgrade.RunAsync(db);
 
     // First admin for a fresh server: ADMIN_EMAIL + ADMIN_PASSWORD (env, e.g. Coolify secrets).
     // Creates the account if it does not exist. An existing account is only made admin when its

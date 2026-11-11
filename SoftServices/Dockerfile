@@ -7,6 +7,8 @@ COPY scripts ./scripts
 RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
 
 FROM deps AS build
+ARG NEXT_PUBLIC_SITE_URL
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 COPY . .
 RUN npm run build
 

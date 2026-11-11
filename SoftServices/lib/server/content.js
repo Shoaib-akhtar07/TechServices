@@ -23,6 +23,8 @@ export async function getSite() {
     developerUrl: s.developerUrl || '',
     announcement: s.announcement || '',
     verification: { google: s.verifyGoogle || '', bing: s.verifyBing || '' },
+    business: s.business || {},
+    profiles: s.profiles || [],
     freeMode: c?.freeMode ?? true,
   };
 }
@@ -63,7 +65,9 @@ export async function findTool(slug) {
 }
 
 export async function listRelatedTools(slug, n) {
-  return relatedTools(slug, n, await listTools());
+  const tools = await listTools();
+  // Variant pages (the many "X to Y" image converters) only appear next to each other.
+  return relatedTools(slug, n, getTool(slug)?.variant ? tools : tools.filter((t) => !t.variant || t.slug === slug));
 }
 
 // ---------- Blog ----------

@@ -51,6 +51,8 @@ public partial class AuthController(AppDbContext db, TokenService tokens, Curren
         // Same message either way, so the endpoint does not reveal which emails have accounts.
         if (user is null || string.IsNullOrEmpty(req.Password) || !BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
             return Unauthorized(new { error = "Wrong email or password." });
+        if (user.SuspendedAt is not null)
+            return StatusCode(403, new { error = "This account has been suspended. Please contact support." });
         var (token, expires) = tokens.Create(user);
         return Ok(new { token, expiresAt = expires, user = await MeAsync(user) });
     }
